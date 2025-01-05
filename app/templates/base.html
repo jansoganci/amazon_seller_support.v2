@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %} - Amazon Seller Support</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    {% block head %}{% endblock %}
+</head>
+<body class="bg-gray-100">
+    {% include 'components/header.html' %}
+    
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed top-16 left-0 z-40 w-64 h-screen transition-transform bg-white border-r border-gray-200">
+        {% include 'components/sidebar.html' %}
+    </aside>
+    
+    <!-- Main content -->
+    <div id="main-content" class="p-4 mt-16 mb-16 transition-all duration-300">
+        {% block content %}{% endblock %}
+    </div>
+    
+    {% include 'components/footer.html' %}
+    
+    <script>
+        const toggleButton = document.getElementById('toggleSidebar');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
+        let isSidebarOpen = window.innerWidth >= 1024;
+        
+        function updateSidebar() {
+            if (isSidebarOpen) {
+                sidebar.style.transform = 'translateX(0)';
+                mainContent.classList.add('ml-64');
+            } else {
+                sidebar.style.transform = 'translateX(-100%)';
+                mainContent.classList.remove('ml-64');
+            }
+        }
+        
+        function toggleSidebar() {
+            isSidebarOpen = !isSidebarOpen;
+            updateSidebar();
+        }
+        
+        function adjustSidebar() {
+            isSidebarOpen = window.innerWidth >= 1024;
+            updateSidebar();
+        }
+        
+        // İlk yüklemede ve ekran boyutu değiştiğinde çalıştır
+        window.addEventListener('load', adjustSidebar);
+        window.addEventListener('resize', adjustSidebar);
+        toggleButton.addEventListener('click', toggleSidebar);
+    </script>
+</body>
+</html>
