@@ -1,148 +1,79 @@
 {% extends 'base.html' %}
 
-{% block title %}Upload CSV{% endblock %}
+{% block title %}CSV Yükle{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto py-8">
-    <div class="bg-white shadow sm:rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-            <h3 class="text-lg font-medium leading-6 text-gray-900">Upload CSV File</h3>
-            
-            <div class="mt-2 max-w-xl text-sm text-gray-500">
-                <p>Choose a CSV file to upload. Make sure your CSV file includes the store_name column.</p>
-            </div>
-            
-            <!-- Flash Messages -->
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="mt-4 p-4 rounded-md {% if category == 'error' %}bg-red-50 text-red-700{% else %}bg-green-50 text-green-700{% endif %}">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-            
-            <form method="POST" enctype="multipart/form-data" class="mt-5">
-                <div class="space-y-6">
-                    <!-- File Type Selection -->
-                    <div>
-                        <label for="file_type" class="block text-sm font-medium text-gray-700">File Type</label>
-                        <select id="file_type" name="file_type" required
-                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
-                            <option value="">Select a file type</option>
-                            <option value="business_report">Business Report</option>
-                            <option value="advertising_report">Advertising Report</option>
-                            <option value="return_report">Return Report</option>
-                            <option value="inventory_report">Inventory Report</option>
-                        </select>
+<div class="container">
+    <h1 class="mb-4">CSV Dosyası Yükle</h1>
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" enctype="multipart/form-data">
+                <!-- Rapor Tipi Seçimi -->
+                <div class="mb-3">
+                    <label for="report_type" class="form-label">Rapor Tipi</label>
+                    <select id="report_type" name="report_type" required class="form-select">
+                        <option value="">Seçiniz</option>
+                        {% for report_type in report_types %}
+                        <option value="{{ report_type }}">
+                            {% if report_type == 'store' %}
+                                Mağaza Bilgileri
+                            {% elif report_type == 'business_report' %}
+                                İş Raporu
+                            {% elif report_type == 'inventory_report' %}
+                                Envanter Raporu
+                            {% elif report_type == 'advertising_report' %}
+                                Reklam Raporu
+                            {% elif report_type == 'return_report' %}
+                                İade Raporu
+                            {% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Dosya Seçimi -->
+                <div class="mb-3">
+                    <label for="file" class="form-label">CSV Dosyası</label>
+                    <input id="file" name="file" type="file" class="form-control" accept=".csv" required>
+                    <div id="file-name" class="form-text d-none">
+                        Seçilen dosya: <span></span>
                     </div>
-                    
-                    <!-- Required Columns Info -->
-                    <div class="bg-gray-50 p-4 rounded-md">
-                        <h4 class="text-sm font-medium text-gray-900 mb-2">Required Columns</h4>
-                        <div id="business_report_cols" class="hidden">
-                            <p class="text-xs text-gray-500">store_name, date, asin, product_name, units_sold, sales, conversion_rate, impressions, clicks</p>
-                        </div>
-                        <div id="advertising_report_cols" class="hidden">
-                            <p class="text-xs text-gray-500">store_name, date, campaign_name, impressions, clicks, cost, sales, acos, roas</p>
-                        </div>
-                        <div id="return_report_cols" class="hidden">
-                            <p class="text-xs text-gray-500">store_name, date, asin, product_name, return_reason, return_rate</p>
-                        </div>
-                        <div id="inventory_report_cols" class="hidden">
-                            <p class="text-xs text-gray-500">store_name, date, asin, product_name, quantity, restock_level, days_of_supply</p>
-                        </div>
-                    </div>
-                    
-                    <!-- File Upload -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">File Upload</label>
-                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-                            <div class="space-y-1 text-center">
-                                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                                <div class="flex text-sm text-gray-600">
-                                    <label for="file" class="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500">
-                                        <span>Upload a file</span>
-                                        <input id="file" name="file" type="file" accept=".csv" class="sr-only" required>
-                                    </label>
-                                    <p class="pl-1">or drag and drop</p>
-                                </div>
-                                <p class="text-xs text-gray-500">CSV up to 10MB</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Submit Button -->
-                    <div class="flex justify-end">
-                        <button type="submit" class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                            Upload
-                        </button>
-                    </div>
+                </div>
+                
+                <!-- Yükleme Butonu -->
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">Yükle</button>
                 </div>
             </form>
         </div>
     </div>
+    
+    <!-- Yardım Bilgisi -->
+    <div class="alert alert-info mt-4">
+        <h4 class="alert-heading">CSV Formatı Hakkında</h4>
+        <p>Her CSV dosyası için gerekli sütunlar:</p>
+        <ul class="mb-0">
+            <li><strong>Mağaza Bilgileri:</strong> store_id, store_name</li>
+            <li><strong>İş Raporu:</strong> store_id, asin, title, units_sold, revenue, returns, conversion_rate, page_views, sessions</li>
+            <li><strong>Envanter Raporu:</strong> store_id, asin, title, units_available, units_inbound, units_reserved, units_total, reorder_required</li>
+            <li><strong>Reklam Raporu:</strong> store_id, campaign_name, impressions, clicks, cost, sales, ACOS, ROI</li>
+            <li><strong>İade Raporu:</strong> store_id, asin, title, return_reason, return_count, total_units_sold, return_rate, customer_feedback</li>
+        </ul>
+    </div>
 </div>
 
 <script>
-    // Dosya tipi değiştiğinde gerekli sütunları göster/gizle
-    const fileTypeSelect = document.getElementById('file_type');
-    const colInfoDivs = {
-        'business_report': document.getElementById('business_report_cols'),
-        'advertising_report': document.getElementById('advertising_report_cols'),
-        'return_report': document.getElementById('return_report_cols'),
-        'inventory_report': document.getElementById('inventory_report_cols')
-    };
-    
-    fileTypeSelect.addEventListener('change', function() {
-        // Tüm div'leri gizle
-        Object.values(colInfoDivs).forEach(div => div.classList.add('hidden'));
-        
-        // Seçilen dosya tipine ait div'i göster
-        const selectedType = this.value;
-        if (selectedType && colInfoDivs[selectedType]) {
-            colInfoDivs[selectedType].classList.remove('hidden');
+    // Dosya seçildiğinde adını göster
+    document.getElementById('file').addEventListener('change', function(e) {
+        const fileName = e.target.files[0]?.name;
+        const fileNameDiv = document.getElementById('file-name');
+        if (fileName) {
+            fileNameDiv.querySelector('span').textContent = fileName;
+            fileNameDiv.classList.remove('d-none');
+        } else {
+            fileNameDiv.classList.add('d-none');
         }
     });
-    
-    // Drag and drop işlevselliği
-    const dropZone = document.querySelector('form');
-    const fileInput = document.querySelector('input[type="file"]');
-
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, preventDefaults, false);
-    });
-
-    function preventDefaults (e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-
-    ['dragenter', 'dragover'].forEach(eventName => {
-        dropZone.addEventListener(eventName, highlight, false);
-    });
-
-    ['dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, unhighlight, false);
-    });
-
-    function highlight(e) {
-        dropZone.classList.add('border-primary-500');
-    }
-
-    function unhighlight(e) {
-        dropZone.classList.remove('border-primary-500');
-    }
-
-    dropZone.addEventListener('drop', handleDrop, false);
-
-    function handleDrop(e) {
-        const dt = e.dataTransfer;
-        const files = dt.files;
-        fileInput.files = files;
-    }
 </script>
 {% endblock %}

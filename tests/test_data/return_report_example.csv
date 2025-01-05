@@ -1,0 +1,29 @@
+store_id,store_name,asin,title,return_reason,return_count,total_units_sold,return_rate,customer_feedback
+1,US Store,B001ABC123,Ergonomic Chair,Size Issue,5,100,5.00,Product too large for my space
+1,US Store,B002XYZ456,Office Lamp,Defective,3,80,3.75,Light flickers after a few days
+1,US Store,B003LMN789,Noise Cancelling Headphones,Not as Described,4,120,3.33,Expected better noise cancellation
+2,UK Store,B004PQR123,Wireless Mouse,Better Price Found,2,70,2.86,Found cheaper alternative
+2,UK Store,B005STU456,Keyboard,Wrong Item,1,64,1.56,Received different model
+2,UK Store,B006VWX789,Monitor,Damaged,3,120,2.50,Arrived with screen damage
+3,DE Store,B007DEF123,Standing Desk,Quality Issue,4,90,4.44,Unstable at max height
+4,FR Store,B010ABC123,Bookcase,Defective,1,104,0.96,Damaged wood panel
+4,FR Store,B011XYZ456,Storage Cabinet,Damaged during shipping,2,84,2.38,Broken handle
+4,FR Store,B012LMN789,Desk Lamp,Not as described,1,96,1.04,Too dim
+5,IT Store,B013PQR123,Ergonomic Keyboard,Performance Issue,1,72,1.39,Keypress delay
+5,IT Store,B014STU456,Wireless Charger,Not compatible,2,60,3.33,Device not supported
+5,IT Store,B015VWX789,Mousepad,Not needed,1,88,1.14,Wrong size ordered
+6,JP Store,B016DEF123,Gaming Chair,Damaged during shipping,3,140,2.14,Broken wheels
+6,JP Store,B017GHI456,Monitor Riser,Defective,2,118,1.69,Poor stability
+6,JP Store,B018JKL789,Laptop Stand,Not as described,1,104,0.96,Too small for 15" laptops
+7,CA Store,B019ABC123,Desk Organizer,Not needed,2,148,1.35,Customer ordered duplicate
+7,CA Store,B020XYZ456,Filing Cabinet,Defective,3,136,2.21,Drawer doesn't open properly
+7,CA Store,B021LMN789,Adjustable Table,Damaged during shipping,4,160,2.5,Scratches on surface
+8,AU Store,B022PQR123,Mobile Stand,Not as described,1,66,1.52,Didn't fit phone model
+8,AU Store,B023STU456,Smart Light,Performance Issue,1,58,1.72,Connectivity issues
+8,AU Store,B024VWX789,USB Hub,Not compatible,2,96,2.08,Doesn't support USB 3.0
+9,IN Store,B025DEF123,Office Chair,Defective,1,104,0.96,Reclining mechanism faulty
+9,IN Store,B026GHI456,Standing Desk,Damaged during shipping,2,98,2.04,Dented edges
+9,IN Store,B027JKL789,Desk Accessories,Not needed,3,124,2.42,Ordered by mistake
+10,MX Store,B028ABC123,File Cabinet,Damaged during shipping,2,128,1.56,Bent corners
+10,MX Store,B029XYZ456,Storage Solutions,Not as described,2,106,1.89,Smaller than expected
+10,MX Store,B030LMN789,Desk Lamp,Performance Issue,1,84,1.19,Bulb flickering

@@ -15,7 +15,7 @@ class User(UserMixin, db.Model):
     preferred_currency = db.Column(db.String(3), default='USD')
     
     # İlişkiler
-    stores = db.relationship('Store', backref='user', lazy=True)
+    stores = db.relationship('Store', backref='owner', lazy=True)
     csv_files = db.relationship('CSVFile', backref='user', lazy=True)
     
     def set_password(self, password):

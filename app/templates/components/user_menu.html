@@ -1,0 +1,11 @@
+{% if current_user.is_authenticated %}
+<div class="flex items-center">
+    <span class="text-gray-700 mr-4">{{ current_user.name }}</span>
+    <a href="{{ url_for('auth.logout') }}" class="text-red-600 hover:text-red-800">Çıkış Yap</a>
+</div>
+{% else %}
+<div class="flex items-center space-x-4">
+    <a href="{{ url_for('auth.login') }}" class="text-primary-600 hover:text-primary-800">Giriş Yap</a>
+    <a href="{{ url_for('auth.register') }}" class="text-primary-600 hover:text-primary-800">Kayıt Ol</a>
+</div>
+{% endif %}
