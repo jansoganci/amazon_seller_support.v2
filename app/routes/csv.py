@@ -42,10 +42,14 @@ def save_report_data(df, report_type):
                     store_id=row['store_id'],
                     asin=row['asin'],
                     units_sold=row['units_sold'],
-                    revenue=row['revenue']
+                    revenue=row['revenue'],
+                    returns=row['returns'],
+                    conversion_rate=row['conversion_rate'],
+                    page_views=row['page_views'],
+                    sessions=row['sessions']
                 ).first()
                 if existing:
-                    continue
+                    return False, 'Bu rapor zaten yüklenmiş'
                     
                 report = BusinessReport(
                     store_id=row['store_id'],
@@ -66,10 +70,14 @@ def save_report_data(df, report_type):
                     store_id=row['store_id'],
                     campaign_name=row['campaign_name'],
                     impressions=row['impressions'],
-                    clicks=row['clicks']
+                    clicks=row['clicks'],
+                    cost=row['cost'],
+                    sales=row['sales'],
+                    acos=row['acos'],
+                    roi=row['roi']
                 ).first()
                 if existing:
-                    continue
+                    return False, 'Bu rapor zaten yüklenmiş'
                     
                 report = AdvertisingReport(
                     store_id=row['store_id'],
@@ -89,10 +97,12 @@ def save_report_data(df, report_type):
                     store_id=row['store_id'],
                     asin=row['asin'],
                     return_reason=row['return_reason'],
-                    return_count=row['return_count']
+                    return_count=row['return_count'],
+                    total_units_sold=row['total_units_sold'],
+                    return_rate=row['return_rate']
                 ).first()
                 if existing:
-                    continue
+                    return False, 'Bu rapor zaten yüklenmiş'
                     
                 report = ReturnReport(
                     store_id=row['store_id'],
@@ -111,10 +121,13 @@ def save_report_data(df, report_type):
                 existing = InventoryReport.query.filter_by(
                     store_id=row['store_id'],
                     asin=row['asin'],
+                    units_available=row['units_available'],
+                    units_inbound=row['units_inbound'],
+                    units_reserved=row['units_reserved'],
                     units_total=row['units_total']
                 ).first()
                 if existing:
-                    continue
+                    return False, 'Bu rapor zaten yüklenmiş'
                     
                 report = InventoryReport(
                     store_id=row['store_id'],
@@ -130,10 +143,11 @@ def save_report_data(df, report_type):
 
         db.session.commit()
         return True, None
+        
     except Exception as e:
         db.session.rollback()
         logger.error(f"Veri kaydetme hatası: {str(e)}", exc_info=True)
-        return False, str(e)
+        return False, f'Veri kaydetme hatası: {str(e)}'
 
 @bp.route('/csv/upload', methods=['GET', 'POST'])
 @login_required
@@ -142,7 +156,7 @@ def upload():
     if request.method == 'POST':
         # Dosya kontrolü
         if 'file' not in request.files:
-            flash('Dosya seçilmedi', 'error')
+            flash('Dosya seçilmedi', 'danger')
             return redirect(request.url)
             
         file = request.files['file']
@@ -150,23 +164,29 @@ def upload():
         
         # Temel kontroller
         if file.filename == '':
-            flash('Dosya seçilmedi', 'error')
+            flash('Dosya seçilmedi', 'danger')
             return redirect(request.url)
             
         if not report_type:
-            flash('Lütfen rapor tipini seçin', 'error')
+            flash('Lütfen rapor tipini seçin', 'danger')
             return redirect(request.url)
             
         if not file.filename.lower().endswith('.csv'):
-            flash('Sadece CSV dosyaları kabul edilmektedir', 'error')
+            flash('Sadece CSV dosyaları kabul edilmektedir', 'danger')
             return redirect(request.url)
+            
+        # Dosya boyutu kontrolü (5MB)
+        if len(file.read()) > 5 * 1024 * 1024:
+            flash('Dosya boyutu 5MB\'dan büyük olamaz', 'danger')
+            return redirect(request.url)
+        file.seek(0)  # Dosya pointer'ı başa al
         
         try:
             # CSV doğrulama
             is_valid, error_message, metadata = CSVValidator.validate_csv(file, report_type)
             
             if not is_valid:
-                flash(error_message, 'error')
+                flash(error_message, 'danger')
                 return redirect(request.url)
             
             # Dosyayı kaydet
@@ -175,7 +195,7 @@ def upload():
             
             # Dosya zaten var mı kontrol et
             if os.path.exists(file_path):
-                flash('Bu dosya zaten yüklenmiş', 'error')
+                flash('Bu dosya zaten yüklenmiş', 'danger')
                 return redirect(request.url)
                 
             file.seek(0)
@@ -187,7 +207,7 @@ def upload():
                 # Dosyayı sil
                 if os.path.exists(file_path):
                     os.remove(file_path)
-                flash(error, 'error')
+                flash(error, 'danger')
                 return redirect(request.url)
             
             # CSV dosyasını kaydet
@@ -203,11 +223,11 @@ def upload():
             db.session.commit()
             
             flash('CSV dosyası başarıyla yüklendi', 'success')
-            return redirect(url_for('main.index'))
+            return redirect(url_for('main.dashboard'))
             
         except Exception as e:
             logger.error(f"Dosya yükleme hatası: {str(e)}", exc_info=True)
-            flash(f'Beklenmeyen bir hata oluştu', 'error')
+            flash(f'Beklenmeyen bir hata oluştu: {str(e)}', 'danger')
             return redirect(request.url)
     
     return render_template('csv/upload.html', report_types=CSVValidator.REQUIRED_COLUMNS.keys())

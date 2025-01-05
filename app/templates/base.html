@@ -63,7 +63,17 @@
         {% block content %}{% endblock %}
     </div>
 
+    {# JavaScript dosyaları #}
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script>
+        // Flash mesajlarını otomatik kapat
+        $(document).ready(function() {
+            setTimeout(function() {
+                $('.alert').alert('close');
+            }, 5000); // 5 saniye sonra kapat
+        });
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

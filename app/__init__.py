@@ -42,10 +42,11 @@ def create_app(config_name=None):
         from app.models.reports import BusinessReport, AdvertisingReport, ReturnReport, InventoryReport
         
         # Blueprint'lerin kaydedilmesi
-        from app.routes import main, auth, csv
+        from app.routes import main, auth, csv, settings
         app.register_blueprint(auth.bp)
         app.register_blueprint(main.bp)
         app.register_blueprint(csv.bp)
+        app.register_blueprint(settings.bp)
         
         # Veritabanı oluşturma
         db.create_all()
