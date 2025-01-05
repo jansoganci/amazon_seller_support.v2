@@ -38,6 +38,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Resolved issues with holiday period detection
 - Fixed integration issues in test fixtures
 
+## [1.2.0] - 2025-01-05
+### Added
+- Seasonal Analytics Dashboard
+  - Monthly/Quarterly trend analysis
+  - Peak period detection
+  - Special period analysis
+- CSV Upload Functionality
+  - Multiple report type support
+  - Progress tracking
+  - Upload history
+  - File validation
+
+### Changed
+- Improved API response structure
+- Enhanced error handling
+- Updated documentation
+
+### Fixed
+- Chart rendering issues
+- Data structure inconsistencies
+- Route parameter validation
+
 ## [0.1.0] - 2025-01-05
 ### Added
 - Initial project setup

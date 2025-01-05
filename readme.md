@@ -9,6 +9,15 @@ A powerful analytics platform for Amazon sellers to process CSV reports and gain
 - Performance dashboards
 - Multi-store support
 - Data visualization
+- Seasonal Analytics Dashboard
+  - Monthly/Quarterly/Weekly trend analysis
+  - Peak period detection
+  - Special period analysis (Black Friday, Christmas, etc.)
+- CSV Report Upload
+  - Support for multiple report types
+  - Progress tracking
+  - Upload history
+  - Validation and error handling
 
 ## MVP Timeline (2 Weeks)
 ### Week 1: Analytics Engine

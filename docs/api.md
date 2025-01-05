@@ -243,6 +243,101 @@ GET /api/v1/analytics/special-periods/{store_id}
 }
 ```
 
+### Seasonal Analytics
+
+#### GET /api/v1/analytics/seasonal/<store_id>
+Returns seasonal analytics data for the specified store.
+
+**Parameters:**
+- `store_id` (path parameter, integer): ID of the store
+
+**Response:**
+```json
+{
+  "status": "success",
+  "data": {
+    "seasonal_trends": [
+      {
+        "period": "2024-Q4",
+        "trend": "up",
+        "growth_rate": 15.5,
+        "significance": "high"
+      }
+    ],
+    "peak_periods": [
+      {
+        "start_date": "2024-11-25",
+        "end_date": "2024-12-25",
+        "type": "holiday_season",
+        "sales_increase": 45.2
+      }
+    ],
+    "special_periods": [
+      {
+        "date": "2024-11-24",
+        "name": "Black Friday",
+        "sales_volume": 12500,
+        "yoy_growth": 22.5
+      }
+    ]
+  }
+}
+```
+
+### CSV Upload
+
+#### POST /upload-csv
+Uploads and processes a CSV report file.
+
+**Request:**
+- Content-Type: multipart/form-data
+
+**Parameters:**
+- `file` (file): CSV file to upload
+- `report_type` (string): Type of report
+  - Allowed values: 
+    - business_report
+    - inventory_report
+    - advertising_report
+    - return_report
+
+**Response:**
+```json
+{
+  "status": "success",
+  "message": "File uploaded successfully",
+  "data": {
+    "file_id": "123",
+    "filename": "business_report_2024.csv",
+    "report_type": "business_report",
+    "upload_date": "2025-01-05T21:16:06+07:00",
+    "status": "processing"
+  }
+}
+```
+
+#### GET /api/v1/upload-history
+Returns the upload history for the current user.
+
+**Response:**
+```json
+{
+  "status": "success",
+  "data": {
+    "uploads": [
+      {
+        "file_id": "123",
+        "filename": "business_report_2024.csv",
+        "report_type": "business_report",
+        "upload_date": "2025-01-05T21:16:06+07:00",
+        "status": "completed",
+        "rows_processed": 1500
+      }
+    ]
+  }
+}
+```
+
 ## Error Responses
 All endpoints may return the following errors:
 

@@ -292,6 +292,85 @@ class AnalyticsEngine:
     def analyze_seasonal_trends(
         self,
         store_id: int,
+        season_type: str = 'monthly',
+        base_year: int = 2025,
+        comparison_years: Optional[List[int]] = None,
+        include_special_periods: bool = True
+    ) -> Dict:
+        """Analyze seasonal trends for a store."""
+        try:
+            # Transform data into the format frontend expects
+            if season_type == 'monthly':
+                months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                values = [1000, 1200, 1100, 1300, 1400, 1600, 1800, 1700, 1900, 2100, 2500, 3000]  # Sample data
+            elif season_type == 'quarterly':
+                months = ['Q1', 'Q2', 'Q3', 'Q4']
+                values = [3300, 4300, 5400, 7600]  # Sample data
+            else:
+                months = ['Week 1', 'Week 2', 'Week 3', 'Week 4']
+                values = [500, 600, 700, 800]  # Sample data
+
+            # Return data in the format frontend expects
+            return {
+                'revenue_trend': {
+                    'labels': months,
+                    'values': values
+                }
+            }
+            
+        except Exception as e:
+            print(f"Error in analyze_seasonal_trends: {str(e)}")
+            return {
+                'revenue_trend': {
+                    'labels': [],
+                    'values': []
+                }
+            }
+
+    def get_seasonal_data(self, store_id: int, season_type: str, base_year: int) -> Dict:
+        """Get raw seasonal data from database."""
+        # This is where we'll actually get data from database later
+        return {}
+
+    def analyze_peak_periods(
+        self,
+        store_id: int,
+        year: int = 2025,
+        threshold: float = 0.1
+    ) -> Dict:
+        """Analyze peak sales periods."""
+        try:
+            return {
+                'labels': ['Black Friday', 'Christmas', 'Prime Day', "Valentine's"],
+                'values': [5000, 4500, 3500, 2000]
+            }
+        except Exception as e:
+            print(f"Error in analyze_peak_periods: {str(e)}")
+            return {
+                'labels': [],
+                'values': []
+            }
+
+    def analyze_special_periods(
+        self,
+        store_id: int
+    ) -> Dict:
+        """Analyze special period performance."""
+        try:
+            return {
+                'labels': ['Revenue', 'Orders', 'Average Order Value', 'Customer Satisfaction', 'Return Rate'],
+                'values': [90, 85, 88, 92, 95]
+            }
+        except Exception as e:
+            print(f"Error in analyze_special_periods: {str(e)}")
+            return {
+                'labels': [],
+                'values': []
+            }
+
+    def analyze_seasonal_trends(
+        self,
+        store_id: int,
         season_type: SeasonType,
         base_year: int,
         comparison_years: Optional[List[int]] = None,

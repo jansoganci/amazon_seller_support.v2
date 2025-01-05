@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{% endblock %} - Amazon Seller Support</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -28,6 +30,14 @@
             }
         }
     </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        @media (max-width: 768px) {
+            .mobile-chart {
+                height: 300px !important;
+            }
+        }
+    </style>
     <script>
         // Tema ayarlarını kontrol et
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -101,6 +111,20 @@
             const isCurrentlyOpen = !sidebar.classList.contains('-translate-x-full');
             setSidebarState(!isCurrentlyOpen);
         });
+
+        // Chart.js theme handling
+        function updateChartTheme(darkMode) {
+            if (darkMode) {
+                Chart.defaults.color = '#F9FAFB';
+                Chart.defaults.borderColor = '#374151';
+            } else {
+                Chart.defaults.color = '#111827';
+                Chart.defaults.borderColor = '#E5E7EB';
+            }
+        }
+
+        // Initialize chart theme
+        updateChartTheme(localStorage.theme === 'dark');
     </script>
     {% block scripts %}{% endblock %}
 </body>

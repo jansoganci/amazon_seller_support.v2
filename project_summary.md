@@ -1,5 +1,11 @@
 # Amazon Seller Support - Proje Özeti
 
+## 0. Dikkat Edilecek Dokümanlar (Önce Bu dokamnları inceleyin):
+- [AI Guidelines](ai_guidelines.md)
+- [Readme](readme.md)
+- [Progress](progress.md)
+- [Design Guide](design_guide.md)
+
 ## 1. AI Guidelines (ai_guidelines.md)
 - **Uzmanlık Alanları**:
   - Backend: Flask, Güvenli Kimlik Doğrulama, API Entegrasyonları
