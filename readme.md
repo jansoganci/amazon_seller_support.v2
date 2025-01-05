@@ -1,10 +1,102 @@
-# AMAZON SELLER CSV ANALYZER - MVP
+# AMAZON SELLER CSV ANALYZER
 
-## AMAÇ
-- Amazon satıcılarının CSV dosyalarını (Business Reports, Inventory Reports vb.) **manuel düzenleme gerektirmeden** yüklemelerini sağlıyorum.  
-- Yüklenen veriler üzerinden **satış, stok, reklam harcaması** gibi temel metrikleri görüntülüyorum ve **shipment planı** oluşturuyorum.  
-- Blog/metadata sayfalarını ve çoklu dil desteğini ilerleyen aşamalarda entegre ediyorum.  
-- Sistemi **Flask ve Tailwind CSS** kullanarak geliştiriyorum ve modern, bakımı kolay bir yapı hedefliyorum.
+## Overview
+A powerful analytics platform for Amazon sellers to process CSV reports and gain valuable insights about their business performance.
+
+## Features
+- CSV file processing (Business Reports, Inventory Reports, etc.)
+- Sales and inventory analytics
+- Performance dashboards
+- Multi-store support
+- Data visualization
+
+## MVP Timeline (2 Weeks)
+### Week 1: Analytics Engine
+- Basic sales trend analysis
+- Inventory status monitoring
+- Data filtering capabilities
+
+### Week 2: Dashboard
+- Metric cards implementation
+- Basic charts (sales trends, inventory status)
+- Responsive design improvements
+
+## Installation
+
+### Prerequisites
+- Python 3.8+
+- pip
+- virtualenv (recommended)
+
+### Setup
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/amazon_seller_support.git
+cd amazon_seller_support
+
+# Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: .\venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Initialize database
+flask db upgrade
+
+# Run the application
+flask run
+```
+
+## Testing
+```bash
+# Run all tests
+pytest
+
+# Run specific test file
+pytest tests/test_csv_processor.py
+
+# Run with coverage report
+pytest --cov=app tests/
+```
+
+## Contributing
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## Project Structure
+```
+amazon_seller_support/
+├── app/                    # Application package
+│   ├── models/            # Database models
+│   ├── routes/            # Route handlers
+│   ├── utils/             # Utility functions
+│   ├── templates/         # Jinja2 templates
+│   └── static/            # Static files
+├── docs/                  # Documentation
+├── tests/                 # Test files
+├── migrations/            # Database migrations
+└── instance/             # Instance-specific files
+```
+
+## Technology Stack
+- **Backend**: Flask (Python)
+- **Frontend**: HTML, Tailwind CSS, Chart.js
+- **Database**: SQLite (Development) / PostgreSQL (Production)
+- **Testing**: Pytest
+- **Documentation**: Markdown
+- **Version Control**: Git
+
+## License
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+- Flask documentation
+- Tailwind CSS
+- Chart.js
 
 ## TEKNOLOJİLER
 - **Backend**: Flask (Python)

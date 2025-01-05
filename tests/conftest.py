@@ -38,7 +38,7 @@ def app():
     test_user = User(
         name='Test User',
         email='test@example.com',
-        password_hash=generate_password_hash('test123')
+        password='test123'
     )
     db.session.add(test_user)
     db.session.commit()

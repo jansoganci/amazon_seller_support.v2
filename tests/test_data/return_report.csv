@@ -1,0 +1,4 @@
+store_id,asin,title,return_reason,return_count,total_units_sold,return_rate
+1,B001TEST1,Test Product 1,Size issue,5,100,0.05
+1,B001TEST2,Test Product 2,Quality issue,3,60,0.05
+1,B001TEST3,Test Product 3,Wrong item,2,40,0.05
