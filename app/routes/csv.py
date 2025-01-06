@@ -154,80 +154,110 @@ def save_report_data(df, report_type):
 def upload():
     """CSV dosyası yükleme sayfası"""
     if request.method == 'POST':
-        # Dosya kontrolü
-        if 'file' not in request.files:
-            flash('Dosya seçilmedi', 'danger')
-            return redirect(request.url)
-            
-        file = request.files['file']
-        report_type = request.form.get('report_type')
-        
-        # Temel kontroller
-        if file.filename == '':
-            flash('Dosya seçilmedi', 'danger')
-            return redirect(request.url)
-            
-        if not report_type:
-            flash('Lütfen rapor tipini seçin', 'danger')
-            return redirect(request.url)
-            
-        if not file.filename.lower().endswith('.csv'):
-            flash('Sadece CSV dosyaları kabul edilmektedir', 'danger')
-            return redirect(request.url)
-            
-        # Dosya boyutu kontrolü (5MB)
-        if len(file.read()) > 5 * 1024 * 1024:
-            flash('Dosya boyutu 5MB\'dan büyük olamaz', 'danger')
-            return redirect(request.url)
-        file.seek(0)  # Dosya pointer'ı başa al
-        
         try:
-            # CSV doğrulama
-            is_valid, error_message, metadata = CSVValidator.validate_csv(file, report_type)
-            
-            if not is_valid:
-                flash(error_message, 'danger')
-                return redirect(request.url)
-            
-            # Dosyayı kaydet
-            filename = secure_filename(file.filename)
-            file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-            
-            # Dosya zaten var mı kontrol et
-            if os.path.exists(file_path):
-                flash('Bu dosya zaten yüklenmiş', 'danger')
+            # Dosya kontrolü
+            if 'file' not in request.files:
+                flash('Dosya seçilmedi', 'danger')
                 return redirect(request.url)
                 
-            file.seek(0)
-            file.save(file_path)
+            file = request.files['file']
+            report_type = request.form.get('report_type')
             
-            # Verileri ilgili tabloya kaydet
-            success, error = save_report_data(metadata['transformed_data'], report_type)
-            if not success:
-                # Dosyayı sil
-                if os.path.exists(file_path):
-                    os.remove(file_path)
-                flash(error, 'danger')
+            # Temel kontroller
+            if file.filename == '':
+                flash('Dosya seçilmedi', 'danger')
+                return redirect(request.url)
+                
+            if not report_type:
+                flash('Lütfen rapor tipini seçin', 'danger')
+                return redirect(request.url)
+                
+            if not file.filename.lower().endswith('.csv'):
+                flash('Sadece CSV dosyaları kabul edilmektedir', 'danger')
                 return redirect(request.url)
             
-            # CSV dosyasını kaydet
-            csv_file = CSVFile(
-                filename=filename,
-                file_path=file_path,
-                file_type=report_type,
-                user_id=current_user.id,
-                row_count=metadata.get('row_count', 0),
-                column_count=metadata.get('column_count', 0)
-            )
-            db.session.add(csv_file)
-            db.session.commit()
+            # CSV doğrulama
+            validator = CSVValidator()
+            logger.info(f"CSV doğrulama başlıyor: {file.filename}, tip: {report_type}")
+            is_valid, error_message, metadata = validator.validate_csv(file, report_type)
+            logger.info(f"CSV doğrulama sonucu: valid={is_valid}, error={error_message}, metadata={metadata}")
             
-            flash('CSV dosyası başarıyla yüklendi', 'success')
-            return redirect(url_for('main.dashboard'))
+            if not is_valid:
+                flash(f'CSV doğrulama hatası: {error_message}', 'danger')
+                return redirect(request.url)
             
+            # Veri kaydetme
+            try:
+                # CSV verilerini kaydet
+                logger.info("CSV verileri kaydediliyor...")
+                save_report_data(metadata['transformed_data'], report_type)
+                logger.info("CSV verileri başarıyla kaydedildi")
+                
+                # CSV dosya kaydını oluştur
+                store_id = metadata['store_ids'][0] if metadata['store_ids'] else None
+                logger.info(f"Store ID: {store_id}")
+                
+                if not store_id:
+                    flash('Store ID bulunamadı', 'danger')
+                    return redirect(request.url)
+                    
+                csv_file = CSVFile(
+                    filename=secure_filename(file.filename),
+                    file_type=report_type,
+                    status='success',
+                    user_id=current_user.id,
+                    store_id=store_id,
+                    row_count=metadata['row_count']
+                )
+                logger.info(f"CSV dosya kaydı oluşturuluyor: {csv_file}")
+                db.session.add(csv_file)
+                db.session.commit()
+                logger.info("CSV dosya kaydı başarıyla oluşturuldu")
+                
+                flash(f'{file.filename} başarıyla yüklendi ve işlendi', 'success')
+            except Exception as e:
+                logger.error(f"Veri kaydetme hatası: {str(e)}", exc_info=True)
+                # Hata durumunda CSV dosya kaydını oluştur
+                store_id = metadata['store_ids'][0] if metadata['store_ids'] else None
+                if store_id:
+                    csv_file = CSVFile(
+                        filename=secure_filename(file.filename),
+                        file_type=report_type,
+                        status='error',
+                        error_message=str(e),
+                        user_id=current_user.id,
+                        store_id=store_id,
+                        row_count=metadata.get('row_count', 0)
+                    )
+                    db.session.add(csv_file)
+                    db.session.commit()
+                
+                flash(f'Veri kaydedilirken hata oluştu: {str(e)}', 'danger')
+                return redirect(request.url)
+                
+            return redirect(url_for('csv.upload'))
+            
+        except pd.errors.EmptyDataError:
+            flash('CSV dosyası boş', 'danger')
+            return redirect(request.url)
+        except pd.errors.ParserError:
+            flash('CSV dosyası okunamadı. Lütfen dosya formatını kontrol edin', 'danger')
+            return redirect(request.url)
         except Exception as e:
-            logger.error(f"Dosya yükleme hatası: {str(e)}", exc_info=True)
+            logger.error(f"CSV yükleme hatası: {str(e)}")
             flash(f'Beklenmeyen bir hata oluştu: {str(e)}', 'danger')
             return redirect(request.url)
     
-    return render_template('csv/upload.html', report_types=CSVValidator.REQUIRED_COLUMNS.keys())
+    # GET request - form sayfasını göster
+    report_types = [
+        'business_report',
+        'inventory_report',
+        'advertising_report',
+        'return_report'
+    ]
+    
+    # Yükleme geçmişini al
+    uploads = CSVFile.query.filter_by(user_id=current_user.id).order_by(CSVFile.upload_date.desc()).all()
+    logger.info(f"Yükleme geçmişi: {len(uploads)} kayıt bulundu")
+    
+    return render_template('csv/upload.html', report_types=report_types, uploads=uploads)

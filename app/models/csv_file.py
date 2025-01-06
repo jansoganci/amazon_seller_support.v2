@@ -8,7 +8,7 @@ class CSVFile(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     store_id = db.Column(db.Integer, db.ForeignKey('store.id'), nullable=False)
     upload_date = db.Column(db.DateTime, default=datetime.utcnow)
-    processed = db.Column(db.Boolean, default=False)
+    status = db.Column(db.String(20), nullable=False, default='pending')  # pending, success, error
     row_count = db.Column(db.Integer)
     error_message = db.Column(db.Text)
     
