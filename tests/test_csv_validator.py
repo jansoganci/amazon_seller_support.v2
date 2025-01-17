@@ -38,15 +38,43 @@ class TestCSVValidator(unittest.TestCase):
         
     def test_advertising_report_valid(self):
         """Geçerli advertising report CSV'sini test eder"""
-        file_path = self.get_test_file_path('advertising_report_example.csv')
-        with open(file_path, 'rb') as file:
+        # Test verisi
+        data = {
+            'store_id': [1],
+            'date': ['2025-01-09'],
+            'campaign_name': ['Test Campaign'],
+            'ad_group_name': ['Test Ad Group'],
+            'targeting_type': ['Keyword'],
+            'match_type': ['Exact'],
+            'search_term': ['test keyword'],
+            'impressions': [1000],
+            'clicks': [100],
+            'ctr': [0.1000],
+            'cpc': [0.50],
+            'spend': [50.00],
+            'total_sales': [200.00],
+            'acos': [0.2500],
+            'total_orders': [10],
+            'total_units': [15],
+            'conversion_rate': [0.0150]
+        }
+        
+        # Test CSV'sini oluştur
+        df = pd.DataFrame(data)
+        test_file = self.get_test_file_path('advertising_report_test.csv')
+        df.to_csv(test_file, index=False)
+        
+        with open(test_file, 'rb') as file:
             is_valid, error_message, metadata = CSVValidator.validate_csv(file, 'advertising_report')
             
         self.assertTrue(is_valid)
         self.assertEqual("CSV dosyası başarıyla doğrulandı", error_message)
-        self.assertEqual(metadata['row_count'], 30)
-        self.assertEqual(metadata['column_count'], 8)
+        self.assertEqual(metadata['row_count'], 1)
+        self.assertEqual(metadata['column_count'], 17)  # Yeni sütun sayısı
         
+        # Test dosyasını temizle
+        os.remove(test_file)
+    
     def test_return_report_valid(self):
         """Geçerli return report CSV'sini test eder"""
         file_path = self.get_test_file_path('return_report_example.csv')
@@ -145,6 +173,67 @@ class TestCSVValidator(unittest.TestCase):
         
         self.assertTrue(is_valid)
         self.assertEqual("CSV dosyası başarıyla doğrulandı", error_message)
+
+    def test_invalid_advertising_data(self):
+        """Geçersiz advertising report verilerini test eder"""
+        # Eksik sütunlu veri
+        data = {
+            'store_id': [1],
+            'campaign_name': ['Test Campaign'],
+            'impressions': [1000],
+            'clicks': [100]
+            # Diğer zorunlu sütunlar eksik
+        }
+        
+        # Test CSV'sini oluştur
+        df = pd.DataFrame(data)
+        test_file = self.get_test_file_path('invalid_advertising_report.csv')
+        df.to_csv(test_file, index=False)
+        
+        with open(test_file, 'rb') as file:
+            is_valid, error_message, metadata = CSVValidator.validate_csv(file, 'advertising_report')
+            
+        self.assertFalse(is_valid)
+        self.assertTrue("Eksik zorunlu sütunlar" in error_message)
+        
+        # Test dosyasını temizle
+        os.remove(test_file)
+
+    def test_invalid_advertising_numeric_data(self):
+        """Geçersiz sayısal değerleri test eder"""
+        data = {
+            'store_id': [1],
+            'date': ['2025-01-09'],
+            'campaign_name': ['Test Campaign'],
+            'ad_group_name': ['Test Ad Group'],
+            'targeting_type': ['Keyword'],
+            'match_type': ['Exact'],
+            'search_term': ['test keyword'],
+            'impressions': ['invalid'],  # Geçersiz sayısal değer
+            'clicks': [100],
+            'ctr': [0.1000],
+            'cpc': [0.50],
+            'spend': [50.00],
+            'total_sales': [200.00],
+            'acos': [0.2500],
+            'total_orders': [10],
+            'total_units': [15],
+            'conversion_rate': [0.0150]
+        }
+        
+        # Test CSV'sini oluştur
+        df = pd.DataFrame(data)
+        test_file = self.get_test_file_path('invalid_numeric_advertising.csv')
+        df.to_csv(test_file, index=False)
+        
+        with open(test_file, 'rb') as file:
+            is_valid, error_message, metadata = CSVValidator.validate_csv(file, 'advertising_report')
+            
+        self.assertFalse(is_valid)
+        self.assertTrue("Geçersiz sayısal değer" in error_message)
+        
+        # Test dosyasını temizle
+        os.remove(test_file)
 
 if __name__ == '__main__':
     unittest.main()

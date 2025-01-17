@@ -1,197 +1,196 @@
-# Amazon Seller Support - Progress Report
+# Amazon Seller Support
 
-## Latest Updates
+## Changelog
 
-### Seasonal Analytics Enhancements (2025-01-05)
-- Implemented robust seasonal trend detection
-  - Enhanced peak detection algorithm using neighbor comparison
-  - Added support for both local and global significance thresholds
-  - Improved handling of holiday periods (Black Friday, Christmas)
-- Added comprehensive test suite
-  - Weekly, monthly, and quarterly analysis tests
-  - Special period analysis tests
-  - Growth pattern detection tests
-  - Year-over-year comparison tests
-- Fixed data handling issues
-  - Proper NULL handling in SQL queries
-  - Better error handling and logging
-  - Fixed integration issues with test fixtures
+### [2025-01-15]
+#### Added
+- Revenue trends API iyileştirmeleri
+  - Satış olmayan günler için 0 değeri atama
+  - Doğru tarih sütunu kullanımı (date)
+  - Recursive CTE ile tarih aralığı sorgusu
+  - ASIN bazlı filtreleme
+- Reklam raporu ekranı eklendi
+  - Temel sayfa yapısı
+  - Dashboard entegrasyonu
+  - Filtreleme seçenekleri (kampanya, ad group, targeting type)
+  - Metrik kartları ve grafikler için altyapı
+#### Fixed
+- Tarih filtreleme sorunları çözüldü
+- SQL sorgularında performans iyileştirmeleri yapıldı
 
-### Seasonal Analytics and CSV Upload Improvements (2025-01-05 21:11)
-- Enhanced Seasonal Analytics Dashboard
-  - Fixed data structure issues in API responses
-  - Implemented proper error handling
-  - Added sample data visualization for testing
-  - Improved chart rendering and updates
-- Restored CSV Upload Functionality
-  - Re-added CSV upload menu item to sidebar
-  - Fixed report type dropdown menu
-  - Added support for multiple report types:
-    - Business Report
-    - Inventory Report
-    - Advertising Report
-    - Return Report
-- Code Organization
-  - Simplified analytics routes
-  - Improved error handling in API endpoints
-  - Better frontend-backend data format consistency
+### [2025-01-13]
+#### Added
+- CSV veri yükleme işlevselliği tamamlandı (Business, Inventory, Advertising ve Return raporları)
+- Store detay sayfası
 
-### Key Improvements
-- Peak Detection:
-  - Now detects peaks by comparing with neighboring months
-  - Uses both local (month-to-month) and global (yearly average) thresholds
-  - Better identifies holiday season spikes
-- Data Analysis:
-  - Enhanced summer trend detection
-  - Improved holiday period analysis
-  - More accurate year-over-year comparisons
-- Test Coverage:
-  - Added comprehensive test suite
-  - Fixed integration issues
-  - Improved test data generation
+#### Fixed
+- Store yetkilendirme sorunu çözüldü
+- CSV validasyon hataları düzeltildi
 
-## Latest Update (2025-01-05)
+### [2025-01-09]
+#### Added
+- Store modeli ve ilişkileri
+- CSV Validator güncellemeleri
+- Mağazalarım UI geliştirmeleri
 
-### Completed Features
+### [2025-01-05]
+#### Added
+- Seasonal Analytics geliştirmeleri
+- Peak detection algoritması
+- Test suite implementasyonu
 
-#### Backend
-- [x] Flask uygulama kurulumu
-- [x] SQLite veritabanı entegrasyonu
-- [x] Flask-Login kullanıcı yönetimi
-- [x] Veritabanı modelleri (User, Store, CSVFile, Reports)
-- [x] CSV doğrulama servisi (CSVValidator)
-- [x] Test coverage iyileştirmeleri
-  - Upload fonksiyonelliği testleri
-  - Auth sistemi testleri
-  - UI testleri
-- [x] User model preferences JSON alanı eklendi
-- [x] Settings route ve form işlemleri
+## Active Issues 🐛
+1. CSV yükleme hataları kullanıcıya gösterilmiyor
+2. CSV sütun isimleri case-sensitive kontrol ediliyor
+3. Store yetkilendirme sorunu tekrar ortaya çıktı (12.01.2025)
 
-#### Frontend
-- [x] Tailwind CSS entegrasyonu
-- [x] Responsive tasarım
-- [x] Base template
-- [x] Login/Register sayfaları
-- [x] Upload sayfası
-- [x] Sidebar ve header tasarımı
-- [x] Flash mesaj sistemi
-- [x] localStorage ile kullanıcı tercihleri
-- [x] Upload progress bar
-- [x] Dosya boyutu ve tip kontrolleri
-- [x] Upload başarı/hata mesajları
-- [x] Settings sayfası tasarımı ve implementasyonu
-  - [x] Profil bilgileri güncelleme formu
-  - [x] Şifre değiştirme formu
-  - [x] Uygulama tercihleri formu
-  - [x] Design guide'a uygun light/dark tema desteği
+## Pending Tasks 📋
+### High Priority
+- [ ] Store düzenleme fonksiyonu
+- [ ] Store silme fonksiyon
+- [ ] Store bazlı rapor filtreleme
+- [ ] Store işlemleri için audit log
+- [ ] Rate limiting
+- [ ] Input sanitization
+- [ ] Dashboard geliştirmeleri
+  - [ ] Metric cards implementation
+  - [ ] Interactive charts (Chart.js entegrasyonu)
+  - [ ] Responsive design improvements
+- [ ] Para birimi API entegrasyonu
+- [ ] Raporlama geliştirmeleri
+  - [ ] Monthly/Quarterly/Weekly trend analysis
+  - [ ] Peak period detection
+  - [ ] Special period analysis (Black Friday, Christmas)
+  - [ ] Upload history tracking
+- [ ] Shipment Planner
+  - [ ] Shipment planning algoritması
+  - [ ] AJAX ile anlık güncelleme
 
-### Development Plan
+### Analytics Development 📊
+#### 1. Finansal Performans Analizleri
+- [ ] Toplam Gelir Trendi Raporu
+- [ ] Kar Marjı Analiz Raporu
+- [ ] ROI Analiz Raporu
+- [ ] En Karlı Ürünler Raporu
+- [ ] Sezonsal Gelir Dalgalanmaları Raporu
 
-#### Phase 1: Data Processing Infrastructure
-1. **CSV Processing System**
-   ```python
-   class CSVProcessor:
-       def validate_csv(self, file_path, report_type)
-       def import_data(self, file_path, store_id)
-       def export_data(self, store_id, report_type, date_range)
-   ```
-   - Implement CSV validation
-   - Create import/export functionality
-   - Add error handling and logging
+#### 2. Ürün Performans Analizleri
+- [ ] En Çok Satan Ürünler Raporu
+- [ ] En Yüksek Dönüşüm Oranlı Ürünler Raporu
+- [ ] Stok Devir Hızı Raporu
+- [ ] İade Oranı Yüksek Ürünler Raporu
+- [ ] Düşük Performanslı Ürünler Raporu
 
-2. **Data Validation Layer**
-   ```python
-   class DataValidator:
-       def validate_store_id(self, store_id)
-       def validate_asin(self, asin)
-       def validate_metrics(self, report_type, metrics)
-   ```
-   - Store ID validation
-   - ASIN consistency checks
-   - Metric validation rules
+#### 3. Stok ve Tedarik Analizleri
+- [ ] Stok Tükenmesi Risk Raporu
+- [ ] Aşırı Stoklu Ürünler Raporu
+- [ ] Optimal Stok Seviyeleri Raporu
+- [ ] Depo Dağılımı Optimizasyon Raporu
+- [ ] Sezonsal Stok İhtiyacı Tahmin Raporu
 
-#### Phase 2: Analytics Engine
-1. **Analysis System**
-   ```python
-   class AnalyticsEngine:
-       def analyze_sales_trends(self, store_id, date_range)
-       def analyze_inventory_status(self, store_id)
-       def analyze_ad_performance(self, store_id)
-       def analyze_returns(self, store_id)
-   ```
-   - Basic metric calculations
-   - Trend analysis functions
-   - Insight generation algorithms
+#### 4. Reklam ve Marketing Analizleri
+- [ ] Kampanya Performans Raporu
+- [ ] ACOS Optimizasyon Raporu
+- [ ] Reklam ROI Analiz Raporu
+- [ ] Keyword Performans Raporu
+- [ ] Kampanya Bütçe Optimizasyon Raporu
 
-2. **Inventory Planning**
-   ```python
-   class InventoryPlanner:
-       def calculate_sales_velocity(self, asin, store_id)
-       def suggest_reorder_quantity(self, asin, store_id)
-       def analyze_warehouse_capacity(self, store_id)
-   ```
-   - Sales velocity calculations
-   - Reorder suggestions
-   - Warehouse optimization
+#### 5. Müşteri Memnuniyeti ve İade Analizleri
+- [ ] İade Nedenleri Detay Raporu
+- [ ] Kategori Bazlı İade Oranları Raporu
+- [ ] Müşteri Memnuniyet Trend Raporu
+- [ ] İade Maliyet Analiz Raporu
+- [ ] Ürün İyileştirme Öneri Raporu
 
-#### Phase 3: API and Frontend
-1. **API Endpoints**
-   ```python
-   # routes/api.py
-   @app.route('/api/reports/import', methods=['POST'])
-   @app.route('/api/reports/export', methods=['GET'])
-   @app.route('/api/analytics/<report_type>', methods=['GET'])
-   @app.route('/api/insights/<store_id>', methods=['GET'])
-   ```
-   - RESTful API design
-   - Authentication and rate limiting
-   - Request/Response formatting
+#### 6. Tahminsel Analizler
+- [ ] Gelir Tahmin Raporu
+- [ ] Stok İhtiyacı Tahmin Raporu
+- [ ] Sezonsal Trend Tahmin Raporu
+- [ ] Peak Dönem Performans Tahmin Raporu
+- [ ] İade Oranı Tahmin Raporu
 
-2. **Dashboard Development**
-   - Chart.js/D3.js integration
-   - Responsive grid layout
-   - Metric cards
-   - Interactive visualizations
+#### 7. Karşılaştırmalı Analizler
+- [ ] Dönemsel Karşılaştırma Raporu (YoY, MoM)
+- [ ] Kategori Performans Karşılaştırma Raporu
+- [ ] Marketplace Karşılaştırma Raporu
+- [ ] Kampanya Performans Karşılaştırma Raporu
+- [ ] Rakip Analiz Raporu
 
-### Testing Strategy
-1. **Unit Tests**
-   - Model validation tests
-   - CSV processing tests
-   - Analytics calculation tests
+#### 8. Aksiyon Önerileri
+- [ ] Stok Optimizasyonu Öneri Raporu
+- [ ] Reklam Bütçesi Ayarlama Raporu
+- [ ] Ürün Fiyatlandırma Öneri Raporu
+- [ ] İade Oranı İyileştirme Raporu
+- [ ] Sezonsal Strateji Öneri Raporu
 
-2. **Integration Tests**
-   - API endpoint tests
-   - Database interaction tests
-   - Frontend-backend integration tests
+### Testing Tasks
+- [ ] CSV format kontrolü testleri
+- [ ] Hata mesajları kontrolü testleri
+- [ ] Dosya kaydetme işlemi testleri
+- [ ] Algoritma çıktı kontrolü testleri
 
-3. **Performance Tests**
-   - Large dataset processing
-   - Concurrent request handling
-   - Database query optimization
+### Future Releases
+- [ ] CSV export fonksiyonu (Faz 2)
+- [ ] Diğer rapor tiplerinin CSV entegrasyonu
 
-### Documentation
-1. **API Documentation**
-   - Endpoint descriptions
-   - Request/Response examples
-   - Authentication details
+## Completed Features ✅
+- [x] CSV örnek dosya şablonu oluşturma
+- [x] CSV yükleme kılavuzu hazırlama
+- [x] Hata mesajlarını daha açıklayıcı hale getirme
+- [x] CSV doğrulama sürecini hızlandırma
+- [x] Store bazlı yetkilendirme
+- [x] Kullanıcı-store ilişkisi kontrolü
+- [x] Business Report CSV entegrasyonu
+- [x] Advertising Report CSV entegrasyonu
+- [x] Return Report CSV entegrasyonu
+- [x] Inventory Report CSV entegrasyonu
 
-2. **User Guide**
-   - CSV format specifications
-   - Dashboard usage instructions
-   - Report interpretation guide
+## Technical Specifications
 
-3. **Technical Documentation**
-   - System architecture
-   - Database schema
-   - Class relationships
+### CSV Format Specifications
+#### Business Report
+```
+store_id, date, sku, asin, title, sessions, units_ordered, ordered_product_sales, total_order_items, conversion_rate
+```
 
-### Next Steps
-1. Begin implementation of CSVProcessor and DataValidator classes
-2. Set up testing framework and write initial tests
-3. Create documentation structure
+#### Advertising Report
+```
+store_id, date, campaign_name, ad_group_name, targeting_type, match_type, search_term, impressions, clicks, ctr, cpc, spend, total_sales, acos, total_orders, total_units, conversion_rate
+```
 
-### Notes
-- Ensure thorough testing at each development phase
-- Maintain clear documentation of all features
-- Focus on code quality and maintainability
-- Regular performance monitoring and optimization
+#### Return Report
+```
+store_id, return_date, order_id, sku, asin, title, quantity, return_reason, status, refund_amount, return_center, return_carrier, tracking_number
+```
+
+#### Inventory Report
+```
+store_id, date, sku, asin, product_name, condition, price, mfn_listing_exists, mfn_fulfillable_quantity, afn_listing_exists, afn_warehouse_quantity, afn_fulfillable_quantity, afn_unsellable_quantity, afn_reserved_quantity, afn_total_quantity, per_unit_volume
+```
+
+## Development Roadmap
+
+### Phase 1: Data Processing Infrastructure
+- CSV Processing System
+- Data Validation Layer
+- Store Management System
+
+### Phase 2: Analytics Engine
+- Analysis System
+- Inventory Planning
+- Advanced Reporting
+
+### Phase 3: Testing & Optimization
+- Unit Tests
+- Integration Tests
+- Performance Tests
+- Security Improvements
+
+## Technical Notes
+- Store ID'ler veritabanı tarafından otomatik oluşturuluyor
+- Her store bir kullanıcıya ait olmalı
+- CSV yüklemelerinde store_id kontrolü kullanıcı bazlı yapılıyor
+- Yeni CSV formatları daha detaylı veri içeriyor
+- Tarih alanları datetime objesine dönüştürülüyor
+- CSV hata mesajları frontend'e iletilmiyor
+- CSV sütun isimlerinde büyük/küçük harf duyarlılığı var

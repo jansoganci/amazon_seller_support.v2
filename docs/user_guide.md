@@ -42,17 +42,26 @@ store_id,asin,title,units_sold,revenue,returns,conversion_rate,page_views,sessio
 ##### Inventory Reports
 Required columns:
 - store_id
+- date
+- sku
 - asin
-- title
-- units_available
-- units_inbound
-- units_reserved
-- reorder_required
+- product_name
+- condition
+- price
+- mfn_listing_exists
+- mfn_fulfillable_quantity
+- afn_listing_exists
+- afn_warehouse_quantity
+- afn_fulfillable_quantity
+- afn_unsellable_quantity
+- afn_reserved_quantity
+- afn_total_quantity
+- per_unit_volume
 
 Example:
 ```csv
-store_id,asin,title,units_available,units_inbound,units_reserved,reorder_required
-1,B001TEST1,Test Product 1,100,50,10,true
+store_id,date,sku,asin,product_name,condition,price,mfn_listing_exists,mfn_fulfillable_quantity,afn_listing_exists,afn_warehouse_quantity,afn_fulfillable_quantity,afn_unsellable_quantity,afn_reserved_quantity,afn_total_quantity,per_unit_volume
+1,2025-01-09,SKU001,B00TEST123,Test Product,New,29.99,true,50,true,100,90,5,5,100,0.5
 ```
 
 ##### Advertising Reports
@@ -75,17 +84,23 @@ store_id,campaign_name,impressions,clicks,cost,sales,ACOS,ROI
 ##### Return Reports
 Required columns:
 - store_id
+- return_date
+- order_id
+- sku
 - asin
 - title
+- quantity
 - return_reason
-- return_count
-- total_units_sold
-- return_rate
+- status
+- refund_amount
+- return_center
+- return_carrier
+- tracking_number
 
 Example:
 ```csv
-store_id,asin,title,return_reason,return_count,total_units_sold,return_rate
-1,B001TEST1,Test Product 1,Size issue,5,100,0.05
+store_id,return_date,order_id,sku,asin,title,quantity,return_reason,status,refund_amount,return_center,return_carrier,tracking_number
+1,2025-01-09,123-4567890-1234567,SKU001,B00TEST123,Test Product,1,Size Issue,Completed,29.99,US_WEST,UPS,1Z999AA1234567890
 ```
 
 ### Dashboard
@@ -249,3 +264,82 @@ For additional help:
 - Email: support@example.com
 - Documentation: /docs
 - FAQ: /faq
+
+### Store Management
+
+#### Store Details Page
+The store details page provides a comprehensive overview of your store's performance:
+
+1. Store Information
+   - Store name and ID
+   - Marketplace region
+   - Creation date
+
+2. Performance Metrics
+   - Total revenue
+   - Number of orders
+   - Return rate
+   - Average order value
+
+3. Inventory Overview
+   - Total number of products
+   - Low stock items
+   - Out of stock items
+
+4. Recent Activity
+   - Latest orders
+   - Recent returns
+   - Inventory updates
+
+## Analytics
+
+### Revenue Trends
+The Revenue Trends feature allows you to analyze your sales performance over time with various filtering and grouping options.
+
+### Viewing Revenue Trends
+
+1. Navigate to Analytics > Revenue Trends
+2. Select your desired filters:
+   - Date Range: Choose start and end dates
+   - Group By: Select daily, weekly, monthly, quarterly, or yearly view
+   - Category: Filter by product category
+   - ASIN: Filter by specific product
+
+### Understanding the Data
+
+The revenue trends chart shows:
+- Revenue line (primary metric)
+- Units sold
+- Number of sessions
+- Conversion rate
+- Previous period comparison
+
+Key metrics displayed:
+- Total Revenue: Sum of all sales in the selected period
+- Total Units: Number of units sold
+- Total Sessions: Number of customer sessions
+- Average Order Value: Revenue per order
+- Growth Rate: Percentage change from previous period
+
+### Tips for Analysis
+
+1. Use different time groupings to spot trends:
+   - Daily: Best for detailed short-term analysis
+   - Weekly: Good for identifying weekly patterns
+   - Monthly: Useful for long-term trends
+   - Quarterly/Yearly: Best for strategic planning
+
+2. Category Analysis:
+   - Use "All Categories" to see overall performance
+   - Select specific categories to analyze performance by product type
+   - Compare different categories to identify top performers
+
+3. ASIN Analysis:
+   - Use "All ASINs" within a category to see category performance
+   - Select specific ASINs to track individual product performance
+   - Compare similar products using ASIN filtering
+
+4. Date Range Tips:
+   - Compare similar periods (e.g., same month last year)
+   - Look at before/after marketing campaigns
+   - Analyze seasonal patterns

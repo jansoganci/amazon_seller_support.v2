@@ -5,80 +5,286 @@ It processes various types of reports (business, inventory, etc.) and generates 
 """
 
 from datetime import datetime, timedelta
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Union
 from decimal import Decimal
 from enum import Enum
 import calendar
+import pandas as pd
 
-from sqlalchemy import func, extract
+from sqlalchemy import func, extract, and_, text
 from app.models.reports import BusinessReport, InventoryReport
 from app.models.store import Store
 from app.utils.data_validator import DataValidator
 from app import db
 
-class SeasonType(Enum):
-    """Types of seasonal periods for analysis."""
+class TimeGrouping(Enum):
+    """Zaman bazlı gruplandırma seçenekleri."""
+    DAILY = 'daily'
     WEEKLY = 'weekly'
     MONTHLY = 'monthly'
     QUARTERLY = 'quarterly'
     YEARLY = 'yearly'
-    CUSTOM = 'custom'
 
 class AnalyticsEngine:
     """Core analytics engine for processing seller data and generating insights."""
-
-    # Special periods (US holidays and shopping events)
-    SPECIAL_PERIODS = {
-        'black_friday': {
-            'name': 'Black Friday',
-            'month': 11,
-            'day_start': 20,  # Week before Black Friday
-            'day_end': 30     # Cyber Monday period
-        },
-        'christmas': {
-            'name': 'Christmas',
-            'month': 12,
-            'day_start': 1,
-            'day_end': 25
-        },
-        'prime_day': {
-            'name': 'Prime Day',
-            'month': 7,
-            'day_start': 11,  # Typical Prime Day period
-            'day_end': 12
-        },
-        'valentines': {
-            'name': "Valentine's Day",
-            'month': 2,
-            'day_start': 1,
-            'day_end': 14
-        }
-    }
 
     def __init__(self):
         """Initialize the analytics engine."""
         self.cache = {}  # Simple in-memory cache
         self.validator = DataValidator()
 
+    def get_revenue_trends(
+        self,
+        store_id: int,
+        start_date: str,
+        end_date: str,
+        group_by: str,
+        category: str = None,
+        asin: str = None
+    ) -> dict:
+        """Get revenue trends for the specified period."""
+        try:
+            print(f"store_id: {store_id}, start_date: {start_date}, end_date: {end_date}, group_by: {group_by}, category: {category}, asin: {asin}")
+            # Convert group_by string to TimeGrouping enum
+            try:
+                group_by = TimeGrouping(group_by)
+            except ValueError:
+                group_by = TimeGrouping.DAILY  # Default to daily if invalid
+
+            # Format dates for SQLite query
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').strftime('%Y-%m-%d 00:00:00')
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').strftime('%Y-%m-%d 23:59:59')
+            
+            # Get SQLite connection directly
+            import sqlite3
+            conn = sqlite3.connect('instance/app.db')
+            
+            # If category is selected, first get ASINs for that category
+            if category:
+                from app.utils.constants import get_category_by_asin
+                category_asins_query = """
+                    SELECT DISTINCT asin 
+                    FROM business_report 
+                    WHERE store_id = ?
+                """
+                df_asins = pd.read_sql(category_asins_query, conn, params=(store_id,))
+                category_asins = [
+                    asin for asin in df_asins['asin'] 
+                    if get_category_by_asin(asin)[0] == category
+                ]
+                if not category_asins:
+                    return {
+                        'labels': [],
+                        'values': [],
+                        'units': [],
+                        'sessions': [],
+                        'conversion_rates': [],
+                        'total_revenue': 0,
+                        'total_units': 0,
+                        'total_sessions': 0,
+                        'average_order_value': 0,
+                        'growth_rate': 0,
+                        'previous_period': 0
+                    }
+                
+                # Base query for revenue trends with category filter
+                query = """
+                    SELECT 
+                        DATE(created_at) as date,
+                        SUM(CAST(REPLACE(REPLACE(ordered_product_sales, '$', ''), ',', '') AS FLOAT)) as revenue,
+                        SUM(units_ordered) as units,
+                        SUM(sessions) as sessions,
+                        CAST(SUM(units_ordered) AS FLOAT) / NULLIF(SUM(sessions), 0) * 100 as conversion_rate
+                    FROM business_report 
+                    WHERE store_id = ?
+                    AND created_at >= ?
+                    AND created_at <= ?
+                    AND asin IN ({})
+                    GROUP BY DATE(created_at)
+                    ORDER BY created_at
+                """.format(','.join(['?'] * len(category_asins)))
+                
+                params = [store_id, start_date, end_date] + category_asins
+                
+            else:
+                # Base query for revenue trends without category filter
+                query = """
+                    SELECT 
+                        DATE(created_at) as date,
+                        SUM(CAST(REPLACE(REPLACE(ordered_product_sales, '$', ''), ',', '') AS FLOAT)) as revenue,
+                        SUM(units_ordered) as units,
+                        SUM(sessions) as sessions,
+                        CAST(SUM(units_ordered) AS FLOAT) / NULLIF(SUM(sessions), 0) * 100 as conversion_rate
+                    FROM business_report 
+                    WHERE store_id = ?
+                    AND created_at >= ?
+                    AND created_at <= ?
+                    AND (? IS NULL OR asin = ?)
+                    GROUP BY DATE(created_at)
+                    ORDER BY created_at
+                """
+                params = (store_id, start_date, end_date, asin, asin)
+            
+            # Execute query and convert to DataFrame
+            df = pd.read_sql(query, conn, params=params)
+            
+            if df.empty:
+                return {
+                    'labels': [],
+                    'values': [],
+                    'units': [],
+                    'sessions': [],
+                    'conversion_rates': [],
+                    'total_revenue': 0,
+                    'total_units': 0,
+                    'total_sessions': 0,
+                    'average_order_value': 0,
+                    'growth_rate': 0,
+                    'previous_period': 0
+                }
+            
+            # Convert date to datetime for grouping
+            df['date'] = pd.to_datetime(df['date'])
+            
+            # Group by the specified time period
+            if group_by == TimeGrouping.DAILY:
+                df['date_group'] = df['date'].dt.strftime('%Y-%m-%d')
+            elif group_by == TimeGrouping.WEEKLY:
+                df['date_group'] = df['date'].dt.to_period('W').dt.strftime('%Y-W%V')
+            elif group_by == TimeGrouping.MONTHLY:
+                df['date_group'] = df['date'].dt.strftime('%Y-%m')
+            elif group_by == TimeGrouping.QUARTERLY:
+                df['date_group'] = df['date'].dt.strftime('%Y-Q%q')
+            else:  # YEARLY
+                df['date_group'] = df['date'].dt.strftime('%Y')
+            
+            # Group metrics by date_group
+            grouped = df.groupby('date_group').agg({
+                'revenue': 'sum',
+                'units': 'sum',
+                'sessions': 'sum'
+            }).reset_index()
+            
+            # Calculate conversion rate after grouping
+            grouped['conversion_rate'] = (grouped['units'] / grouped['sessions'] * 100).fillna(0)
+            
+            # Calculate total metrics
+            total_revenue = float(grouped['revenue'].sum())
+            total_units = int(grouped['units'].sum())
+            total_sessions = int(grouped['sessions'].sum())
+            average_order_value = total_revenue / total_units if total_units > 0 else 0
+            
+            # Get previous period revenue for growth rate
+            previous_revenue = self._get_previous_period_revenue(
+                store_id, start_date, end_date, category, asin
+            )
+            growth_rate = ((total_revenue - previous_revenue) / previous_revenue * 100) if previous_revenue > 0 else 0
+            
+            # Close connection
+            conn.close()
+            
+            return {
+                'labels': grouped['date_group'].tolist(),
+                'values': grouped['revenue'].tolist(),
+                'units': grouped['units'].tolist(),
+                'sessions': grouped['sessions'].tolist(),
+                'conversion_rates': grouped['conversion_rate'].tolist(),
+                'total_revenue': total_revenue,
+                'total_units': total_units,
+                'total_sessions': total_sessions,
+                'average_order_value': average_order_value,
+                'growth_rate': growth_rate,
+                'previous_period': previous_revenue
+            }
+        except Exception as e:
+            print(f"Error in get_revenue_trends: {str(e)}")
+            return {
+                'labels': [],
+                'values': [],
+                'units': [],
+                'sessions': [],
+                'conversion_rates': [],
+                'total_revenue': 0,
+                'total_units': 0,
+                'total_sessions': 0,
+                'average_order_value': 0,
+                'growth_rate': 0,
+                'previous_period': 0
+            }
+
+    def _get_previous_period_revenue(
+        self,
+        store_id: int,
+        start_date: Union[str, datetime],
+        end_date: Union[str, datetime],
+        category: Optional[str] = None,
+        asin: Optional[str] = None
+    ) -> float:
+        """Calculate revenue for the previous period."""
+        try:
+            # Convert dates to datetime objects if they are strings
+            if isinstance(start_date, str):
+                start_date = datetime.strptime(start_date, '%Y-%m-%d')
+            if isinstance(end_date, str):
+                end_date = datetime.strptime(end_date, '%Y-%m-%d')
+
+            # Calculate previous period dates
+            period_length = (end_date - start_date).days
+            prev_start = start_date - timedelta(days=period_length)
+            prev_end = start_date - timedelta(days=1)
+
+            # Format dates for SQLite query
+            prev_start_str = prev_start.strftime('%Y-%m-%d')
+            prev_end_str = prev_end.strftime('%Y-%m-%d')
+
+            # Using raw SQL string instead of SQLAlchemy text
+            sql = """
+                SELECT ordered_product_sales, asin
+                FROM business_report
+                WHERE store_id = ?
+                AND created_at >= ?
+                AND created_at < ?
+                AND (? IS NULL OR asin = ?)
+            """
+            
+            # Get SQLite connection directly
+            import sqlite3
+            conn = sqlite3.connect('instance/app.db')
+            
+            df = pd.read_sql(
+                sql,
+                conn,
+                params=(store_id, prev_start_str, prev_end_str, asin, asin)
+            )
+            
+            if category:
+                from app.utils.constants import get_category_by_asin
+                df['category'] = df['asin'].apply(lambda x: get_category_by_asin(x)[0])
+                df = df[df['category'] == category]
+
+            result = df['ordered_product_sales'].sum()
+            
+            # Close connection
+            conn.close()
+            
+            return float(result) if result else 0.0
+        except Exception as e:
+            print(f"Error in _get_previous_period_revenue: {str(e)}")
+            return 0.0
+
     def validate_analysis_request(
         self,
         store_id: int,
         date_range: Optional[Tuple[datetime, datetime]] = None
     ) -> List[str]:
-        """Validate analysis request parameters.
-        
-        Args:
-            store_id: Store ID to analyze
-            date_range: Optional date range for analysis
-            
-        Returns:
-            List of error messages (empty if valid)
-        """
+        """Validate analysis request parameters."""
         errors = []
         
-        # Validate store exists
-        store = Store.query.get(store_id)
-        if not store:
+        # Validate store exists using raw SQL
+        sql = text("SELECT id FROM store WHERE id = :store_id")
+        result = db.session.execute(sql, {'store_id': store_id}).first()
+        
+        if not result:
             errors.append(f"Store with ID {store_id} not found")
             
         # Validate date range if provided
@@ -94,23 +300,7 @@ class AnalyticsEngine:
         store_id: int, 
         date_range: Tuple[datetime, datetime]
     ) -> Dict:
-        """Analyze sales trends for a specific store over a date range.
-
-        Args:
-            store_id (int): The ID of the store to analyze
-            date_range (tuple): Start and end dates (start_date, end_date)
-
-        Returns:
-            dict: Sales trend analysis including:
-                - daily_sales: List of daily sales totals
-                - total_revenue: Total revenue for period
-                - average_daily_sales: Average daily sales
-                - growth_rate: Growth rate compared to previous period
-                - conversion_rate: Average conversion rate
-                
-        Raises:
-            ValueError: If validation fails
-        """
+        """Analyze sales trends for a specific store over a date range."""
         # Validate request
         errors = self.validate_analysis_request(store_id, date_range)
         if errors:
@@ -118,62 +308,78 @@ class AnalyticsEngine:
             
         start_date, end_date = date_range
         
-        # Get sales data for the period
-        sales_data = (
-            db.session.query(
-                BusinessReport.created_at.date().label('date'),
-                func.sum(BusinessReport.units_sold).label('total_units'),
-                func.sum(BusinessReport.revenue).label('total_revenue'),
-                func.avg(BusinessReport.conversion_rate).label('avg_conversion')
-            )
-            .filter(
-                BusinessReport.store_id == store_id,
-                BusinessReport.created_at.between(start_date, end_date)
-            )
-            .group_by(BusinessReport.created_at.date())
-            .order_by(BusinessReport.created_at.date())
-            .all()
-        )
-
-        # Calculate previous period metrics for comparison
-        period_length = (end_date - start_date).days
-        previous_start = start_date - timedelta(days=period_length)
-        previous_end = start_date - timedelta(days=1)
-
-        previous_data = (
-            db.session.query(
-                func.sum(BusinessReport.units_sold).label('total_units'),
-                func.sum(BusinessReport.revenue).label('total_revenue')
-            )
-            .filter(
-                BusinessReport.store_id == store_id,
-                BusinessReport.created_at.between(previous_start, previous_end)
-            )
-            .first()
+        # Get sales data for the period using raw SQL
+        sql = text("""
+            SELECT 
+                DATE(created_at) as date,
+                SUM(units_sold) as total_units,
+                SUM(revenue) as total_revenue,
+                AVG(conversion_rate) as avg_conversion
+            FROM business_report
+            WHERE store_id = :store_id
+            AND created_at BETWEEN :start_date AND :end_date
+            GROUP BY DATE(created_at)
+            ORDER BY DATE(created_at)
+        """)
+        
+        result = db.session.execute(
+            sql,
+            {
+                'store_id': store_id,
+                'start_date': start_date,
+                'end_date': end_date
+            }
         )
 
         # Process current period data
-        daily_sales = [
-            {
+        daily_sales = []
+        total_revenue = 0
+        total_units = 0
+        total_conversion = 0
+        days_count = 0
+
+        for row in result:
+            daily_data = {
                 'date': row.date.strftime('%Y-%m-%d'),
                 'units': row.total_units,
                 'revenue': float(row.total_revenue),
                 'conversion_rate': float(row.avg_conversion)
             }
-            for row in sales_data
-        ]
+            daily_sales.append(daily_data)
+            total_revenue += daily_data['revenue']
+            total_units += daily_data['units']
+            total_conversion += daily_data['conversion_rate']
+            days_count += 1
 
-        # Calculate total metrics
-        total_revenue = sum(day['revenue'] for day in daily_sales) if daily_sales else 0
-        total_units = sum(day['units'] for day in daily_sales) if daily_sales else 0
-        avg_daily_sales = total_revenue / len(daily_sales) if daily_sales else 0
-        avg_conversion = (
-            sum(day['conversion_rate'] for day in daily_sales) / len(daily_sales)
-            if daily_sales else 0
-        )
+        # Calculate averages
+        avg_daily_sales = total_revenue / days_count if days_count > 0 else 0
+        avg_conversion = total_conversion / days_count if days_count > 0 else 0
+
+        # Calculate previous period metrics
+        period_length = (end_date - start_date).days
+        previous_start = start_date - timedelta(days=period_length)
+        previous_end = start_date - timedelta(days=1)
+
+        prev_sql = text("""
+            SELECT 
+                SUM(units_sold) as total_units,
+                SUM(revenue) as total_revenue
+            FROM business_report
+            WHERE store_id = :store_id
+            AND created_at BETWEEN :start_date AND :end_date
+        """)
+
+        prev_result = db.session.execute(
+            prev_sql,
+            {
+                'store_id': store_id,
+                'start_date': previous_start,
+                'end_date': previous_end
+            }
+        ).first()
 
         # Calculate growth rate
-        previous_revenue = float(previous_data.total_revenue) if previous_data and previous_data.total_revenue else 0
+        previous_revenue = float(prev_result.total_revenue) if prev_result and prev_result.total_revenue else 0
         growth_rate = (
             ((total_revenue - previous_revenue) / previous_revenue * 100)
             if previous_revenue > 0 else 0
@@ -193,23 +399,7 @@ class AnalyticsEngine:
         store_id: int,
         reorder_threshold: float = 0.2  # 20% of total inventory
     ) -> Dict:
-        """Analyze inventory status for a specific store.
-
-        Args:
-            store_id (int): The ID of the store to analyze
-            reorder_threshold (float): Threshold for reorder recommendations
-
-        Returns:
-            dict: Inventory analysis including:
-                - total_inventory: Total units across all products
-                - low_stock_items: List of items below reorder threshold
-                - out_of_stock_items: List of items with zero inventory
-                - inventory_value: Total value of current inventory
-                - reorder_recommendations: List of items that need reordering
-                
-        Raises:
-            ValueError: If validation fails
-        """
+        """Analyze inventory status for a specific store."""
         # Validate request
         errors = self.validate_analysis_request(store_id)
         if errors:
@@ -222,14 +412,22 @@ class AnalyticsEngine:
         if not is_valid:
             raise ValueError(error)
 
-        # Get current inventory data
-        inventory_data = (
-            db.session.query(InventoryReport)
-            .filter(InventoryReport.store_id == store_id)
-            .order_by(InventoryReport.created_at.desc())
-            .all()
-        )
-
+        # Get current inventory data using raw SQL
+        sql = text("""
+            SELECT 
+                asin,
+                title,
+                units_available,
+                units_inbound,
+                units_reserved,
+                reorder_required
+            FROM inventory_report
+            WHERE store_id = :store_id
+            ORDER BY created_at DESC
+        """)
+        
+        result = db.session.execute(sql, {'store_id': store_id})
+        
         # Process inventory data
         items_status = []
         low_stock_items = []
@@ -238,7 +436,7 @@ class AnalyticsEngine:
         total_inventory = 0
         inventory_value = Decimal('0.0')
 
-        for item in inventory_data:
+        for item in result:
             total_units = (
                 item.units_available + 
                 item.units_inbound + 
@@ -282,7 +480,7 @@ class AnalyticsEngine:
             'out_of_stock_items': out_of_stock_items,
             'reorder_recommendations': reorder_recommendations,
             'inventory_summary': {
-                'total_items': len(inventory_data),
+                'total_items': len(items_status),
                 'low_stock_count': len(low_stock_items),
                 'out_of_stock_count': len(out_of_stock_items),
                 'reorder_needed_count': len(reorder_recommendations)
@@ -292,86 +490,7 @@ class AnalyticsEngine:
     def analyze_seasonal_trends(
         self,
         store_id: int,
-        season_type: str = 'monthly',
-        base_year: int = 2025,
-        comparison_years: Optional[List[int]] = None,
-        include_special_periods: bool = True
-    ) -> Dict:
-        """Analyze seasonal trends for a store."""
-        try:
-            # Transform data into the format frontend expects
-            if season_type == 'monthly':
-                months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-                values = [1000, 1200, 1100, 1300, 1400, 1600, 1800, 1700, 1900, 2100, 2500, 3000]  # Sample data
-            elif season_type == 'quarterly':
-                months = ['Q1', 'Q2', 'Q3', 'Q4']
-                values = [3300, 4300, 5400, 7600]  # Sample data
-            else:
-                months = ['Week 1', 'Week 2', 'Week 3', 'Week 4']
-                values = [500, 600, 700, 800]  # Sample data
-
-            # Return data in the format frontend expects
-            return {
-                'revenue_trend': {
-                    'labels': months,
-                    'values': values
-                }
-            }
-            
-        except Exception as e:
-            print(f"Error in analyze_seasonal_trends: {str(e)}")
-            return {
-                'revenue_trend': {
-                    'labels': [],
-                    'values': []
-                }
-            }
-
-    def get_seasonal_data(self, store_id: int, season_type: str, base_year: int) -> Dict:
-        """Get raw seasonal data from database."""
-        # This is where we'll actually get data from database later
-        return {}
-
-    def analyze_peak_periods(
-        self,
-        store_id: int,
-        year: int = 2025,
-        threshold: float = 0.1
-    ) -> Dict:
-        """Analyze peak sales periods."""
-        try:
-            return {
-                'labels': ['Black Friday', 'Christmas', 'Prime Day', "Valentine's"],
-                'values': [5000, 4500, 3500, 2000]
-            }
-        except Exception as e:
-            print(f"Error in analyze_peak_periods: {str(e)}")
-            return {
-                'labels': [],
-                'values': []
-            }
-
-    def analyze_special_periods(
-        self,
-        store_id: int
-    ) -> Dict:
-        """Analyze special period performance."""
-        try:
-            return {
-                'labels': ['Revenue', 'Orders', 'Average Order Value', 'Customer Satisfaction', 'Return Rate'],
-                'values': [90, 85, 88, 92, 95]
-            }
-        except Exception as e:
-            print(f"Error in analyze_special_periods: {str(e)}")
-            return {
-                'labels': [],
-                'values': []
-            }
-
-    def analyze_seasonal_trends(
-        self,
-        store_id: int,
-        season_type: SeasonType,
+        season_type: TimeGrouping,
         base_year: int,
         comparison_years: Optional[List[int]] = None,
         include_special_periods: bool = True
@@ -386,15 +505,15 @@ class AnalyticsEngine:
         base_year_end = datetime(base_year, 12, 31)
 
         # Analyze based on season type
-        if season_type == SeasonType.WEEKLY:
+        if season_type == TimeGrouping.WEEKLY:
             periodic_data = self._analyze_weekly_trends(
                 store_id, base_year_start, base_year_end
             )
-        elif season_type == SeasonType.MONTHLY:
+        elif season_type == TimeGrouping.MONTHLY:
             periodic_data = self._analyze_monthly_trends(
                 store_id, base_year_start, base_year_end
             )
-        elif season_type == SeasonType.QUARTERLY:
+        elif season_type == TimeGrouping.QUARTERLY:
             periodic_data = self._analyze_quarterly_trends(
                 store_id, base_year_start, base_year_end
             )
@@ -406,19 +525,19 @@ class AnalyticsEngine:
         # Get comparison data for each year
         comparison_data = {}
         for year in comparison_years:
-            if season_type == SeasonType.WEEKLY:
+            if season_type == TimeGrouping.WEEKLY:
                 year_start = datetime(year, 1, 1)
                 year_end = datetime(year, 12, 31)
                 comparison_data[year] = self._analyze_weekly_trends(
                     store_id, year_start, year_end
                 )
-            elif season_type == SeasonType.MONTHLY:
+            elif season_type == TimeGrouping.MONTHLY:
                 year_start = datetime(year, 1, 1)
                 year_end = datetime(year, 12, 31)
                 comparison_data[year] = self._analyze_monthly_trends(
                     store_id, year_start, year_end
                 )
-            elif season_type == SeasonType.QUARTERLY:
+            elif season_type == TimeGrouping.QUARTERLY:
                 year_start = datetime(year, 1, 1)
                 year_end = datetime(year, 12, 31)
                 comparison_data[year] = self._analyze_quarterly_trends(
@@ -748,3 +867,40 @@ class AnalyticsEngine:
         except Exception as e:
             print(f"Error in _analyze_yearly_trends for year {year}: {str(e)}")
             return []
+
+    def get_available_categories(self, store_id: int) -> List[str]:
+        """Get available categories for the store using ASIN mapping."""
+        # Get all ASINs for the store using raw SQL
+        sql = text("""
+            SELECT DISTINCT asin 
+            FROM business_report 
+            WHERE store_id = :store_id
+        """)
+        
+        result = db.session.execute(sql, {'store_id': store_id})
+        
+        # Get categories using get_category_by_asin
+        from app.utils.constants import get_category_by_asin
+        categories = set()  # Using set to avoid duplicates
+        for row in result:
+            main_category, _ = get_category_by_asin(row.asin)
+            if main_category:
+                categories.add(main_category)
+        
+        return sorted(list(categories))
+
+    def get_available_asins(self, store_id: int) -> List[Dict[str, str]]:
+        """Get available ASINs for the store."""
+        sql = text("""
+            SELECT DISTINCT asin, title
+            FROM business_report 
+            WHERE store_id = :store_id
+            ORDER BY asin
+        """)
+        
+        result = db.session.execute(sql, {'store_id': store_id})
+        
+        return [
+            {'asin': row.asin, 'title': row.title}
+            for row in result
+        ]

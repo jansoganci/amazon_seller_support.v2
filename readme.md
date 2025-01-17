@@ -120,39 +120,48 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## DOSYA YAPISI
 
 ```
-amazon_seller_support/
+amazon_seller_support.v1/
 ├── app/
 │   ├── __init__.py
-│   ├── routes/
-│   │   ├── __init__.py
-│   │   ├── auth.py
-│   │   ├── main.py
-│   │   └── csv_handler.py
 │   ├── models/
 │   │   ├── __init__.py
-│   │   └── user.py
-│   ├── services/
+│   │   ├── user.py
+│   │   └── store.py
+│   ├── routes/
 │   │   ├── __init__.py
-│   │   └── shipment_service.py
-│   ├── static/
-│   │   ├── css/
-│   │   │   └── main.css
-│   │   └── js/
-│   │       └── app.js
-│   └── templates/
-│       ├── base.html
-│       ├── auth/
-│       │   ├── login.html
-│       │   └── register.html
-│       └── dashboard/
-│           ├── index.html
-│           ├── upload.html
-│           └── shipment.html
+│   │   └── analytics.py
+│   ├── templates/
+│   │   ├── analytics/
+│   │   │   ├── dashboard.html
+│   │   │   ├── advertisement_report.html
+│   │   │   └── revenue_trends.html
+│   │   ├── components/
+│   │   │   └── sidebar.html
+│   │   ├── settings/
+│   │   │   ├── settings.html
+│   │   │   ├── stores.html
+│   │   │   └── create_store.html
+│   │   └── base_tailwind.html
+│   └── utils/
+│       ├── __init__.py
+│       ├── analytics_engine.py
+│       └── constants.py
+├── docs/
+│   ├── api.md
+│   ├── technical.md
+│   └── user_guide.md
 ├── instance/
-│   └── database.sqlite
-├── requirements.txt
-├── config.py
-└── run.py
+│   └── app.db
+├── tests/
+│   ├── __init__.py
+│   ├── conftest.py
+│   └── test_analytics.py
+├── .gitignore
+├── ai_guidelines.md
+├── analytics_progress.md
+├── progress.md
+├── readme.md
+└── requirements.txt
 ```
 
 ## KURULUM

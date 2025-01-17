@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for,
 from flask_login import login_required, current_user
 from app import db
 from app.models.user import User
+from app.models.store import Store  # Ensure Store model is imported
 from werkzeug.security import generate_password_hash
 
 bp = Blueprint('settings', __name__)
@@ -69,3 +70,41 @@ def settings():
         return redirect(url_for('settings.settings'))
         
     return render_template('settings/settings.html')
+
+@bp.route('/stores/create', methods=['GET', 'POST'])
+@login_required
+def create_store():
+    """Yeni mağaza oluşturma"""
+    if request.method == 'POST':
+        name = request.form.get('name')
+        marketplace = request.form.get('marketplace')
+        
+        if not name or not marketplace:
+            flash('Mağaza adı ve Marketplace alanları gereklidir', 'danger')
+            return redirect(request.url)
+            
+        # Yeni mağaza oluştur
+        store = Store(
+            name=name,
+            marketplace=marketplace,
+            user_id=current_user.id
+        )
+        
+        try:
+            db.session.add(store)
+            db.session.commit()
+            flash(f'Mağaza başarıyla oluşturuldu. Store ID: {store.store_id}', 'success')
+            return redirect(url_for('settings.list_stores'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Mağaza oluşturulurken hata oluştu: {str(e)}', 'danger')
+            return redirect(request.url)
+    
+    return render_template('settings/create_store.html')
+
+@bp.route('/stores', methods=['GET'])
+@login_required
+def list_stores():
+    """Kullanıcının mağazalarını listele"""
+    stores = Store.query.filter_by(user_id=current_user.id).all()
+    return render_template('settings/stores.html', stores=stores)

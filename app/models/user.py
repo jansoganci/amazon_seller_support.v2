@@ -16,8 +16,8 @@ class User(UserMixin, db.Model):
     _preferences = db.Column('preferences', db.Text, default='{"language":"tr","currency":"TRY","theme":"light","notifications":{"email":true,"browser":true}}')
     preferred_currency = db.Column(db.String(3), default='USD')
     
-    # İlişkiler
-    stores = db.relationship('Store', backref='owner', lazy=True)
+    # Relationships
+    stores = db.relationship('Store', back_populates='user', lazy=True)
     csv_files = db.relationship('CSVFile', backref='user', lazy=True)
     
     @property

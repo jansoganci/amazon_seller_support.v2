@@ -1,0 +1,525 @@
+{% extends "base_tailwind.html" %}
+
+{% block title %}Revenue Trends{% endblock %}
+
+{% block content %}
+<!-- Toast Container -->
+<div id="toastContainer" class="fixed top-4 right-4 z-50"></div>
+
+<div class="p-4 bg-white dark:bg-gray-900">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Revenue Trends</h1>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Monitor your store's revenue and performance metrics</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date Range</label>
+            <input type="text" id="daterange" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Group By</label>
+            <select id="groupBy" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="yearly">Yearly</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+            <select id="category" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <option value="">All Categories</option>
+                {% for category in categories %}
+                <option value="{{ category }}">{{ category }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ASIN</label>
+            <select id="asin" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <option value="">All ASINs</option>
+                {% for asin_info in asins %}
+                <option value="{{ asin_info.asin }}">{{ asin_info.asin }} - {{ asin_info.title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="flex items-end">
+            <button id="applyFilters" class="w-full px-4 py-2.5 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 dark:focus:ring-primary-800">
+                Apply Filters
+            </button>
+        </div>
+    </div>
+
+    <!-- Metric Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <!-- Total Revenue Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-dollar-sign text-2xl text-primary-600 dark:text-primary-400"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Revenue</p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white" id="totalRevenue">$0</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        <span id="growthRate" class="font-medium">0%</span> vs previous period
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Orders Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-shopping-cart text-2xl text-primary-600 dark:text-primary-400"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Orders</p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white" id="totalUnits">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Sessions Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-users text-2xl text-primary-600 dark:text-primary-400"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Sessions</p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white" id="totalSessions">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Average Order Value Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-receipt text-2xl text-primary-600 dark:text-primary-400"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Average Order Value</p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white" id="averageOrderValue">$0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Grid -->
+    <div class="grid grid-cols-1 gap-6 mb-6">
+        <!-- Revenue Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Revenue Trend</h3>
+            <div class="h-96">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Conversion Rate Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Conversion Rate</h3>
+            <div class="h-96">
+                <canvas id="conversionChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Units Ordered Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Units Ordered</h3>
+            <div class="h-96">
+                <canvas id="unitsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Sessions Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Sessions</h3>
+            <div class="h-96">
+                <canvas id="sessionsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+
+<style>
+/* Toast Styles */
+.toast {
+    position: relative;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    animation: slideIn 0.3s ease-out;
+    max-width: 24rem;
+}
+
+.toast.success {
+    background-color: #10B981;
+    color: white;
+}
+
+.toast.error {
+    background-color: #EF4444;
+    color: white;
+}
+
+.toast.warning {
+    background-color: #F59E0B;
+    color: white;
+}
+
+.toast.info {
+    background-color: #3B82F6;
+    color: white;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+</style>
+
+<script>
+const isDarkMode = document.documentElement.classList.contains('dark');
+let revenueChart, conversionChart, unitsChart, sessionsChart;
+
+// Chart configuration
+const chartConfig = {
+    type: 'line',
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            x: {
+                grid: {
+                    display: false
+                },
+                ticks: {
+                    color: isDarkMode ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.9)'
+                }
+            },
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                },
+                ticks: {
+                    color: isDarkMode ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.9)',
+                    callback: function(value) {
+                        if (this.chart.canvas.id === 'conversionChart') {
+                            return value.toFixed(2) + '%';
+                        } else if (this.chart.canvas.id === 'revenueChart') {
+                            return '$' + value.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                        } else {
+                            return value.toLocaleString('en-US');
+                        }
+                    }
+                }
+            }
+        }
+    }
+};
+
+// Initialize charts
+function initializeCharts() {
+    // Revenue Chart
+    revenueChart = new Chart(document.getElementById('revenueChart').getContext('2d'), {
+        ...chartConfig,
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Revenue',
+                data: [],
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                fill: true
+            }]
+        }
+    });
+
+    // Conversion Rate Chart
+    conversionChart = new Chart(document.getElementById('conversionChart').getContext('2d'), {
+        ...chartConfig,
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Conversion Rate',
+                data: [],
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                fill: true
+            }]
+        }
+    });
+
+    // Units Chart
+    unitsChart = new Chart(document.getElementById('unitsChart').getContext('2d'), {
+        ...chartConfig,
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Units Ordered',
+                data: [],
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                fill: true
+            }]
+        }
+    });
+
+    // Sessions Chart
+    sessionsChart = new Chart(document.getElementById('sessionsChart').getContext('2d'), {
+        ...chartConfig,
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Sessions',
+                data: [],
+                borderColor: '#8b5cf6',
+                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                fill: true
+            }]
+        }
+    });
+}
+
+// Update charts and metrics with new data
+function updateCharts(data) {
+    // Update Revenue Chart
+    revenueChart.data.labels = data.labels;
+    revenueChart.data.datasets[0].data = data.values;
+    revenueChart.update();
+
+    // Update Conversion Rate Chart
+    conversionChart.data.labels = data.labels;
+    conversionChart.data.datasets[0].data = data.conversion_rates;
+    conversionChart.update();
+
+    // Update Units Chart
+    unitsChart.data.labels = data.labels;
+    unitsChart.data.datasets[0].data = data.units;
+    unitsChart.update();
+
+    // Update Sessions Chart
+    sessionsChart.data.labels = data.labels;
+    sessionsChart.data.datasets[0].data = data.sessions;
+    sessionsChart.update();
+
+    // Update metric cards
+    document.getElementById('totalRevenue').textContent = 
+        '{{ current_user.currency_symbol|default("$") }}' + data.total_revenue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('totalUnits').textContent = 
+        data.total_units.toLocaleString('en-US');
+    document.getElementById('totalSessions').textContent = 
+        data.total_sessions.toLocaleString('en-US');
+    document.getElementById('averageOrderValue').textContent = 
+        '{{ current_user.currency_symbol|default("$") }}' + data.average_order_value.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    
+    const growthRateElement = document.getElementById('growthRate');
+    growthRateElement.textContent = data.growth_rate.toFixed(1) + '%';
+    growthRateElement.className = data.growth_rate >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+}
+
+// Toast function
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    // Create toast content
+    const content = document.createElement('div');
+    content.className = 'flex items-center';
+    
+    // Add icon based on type
+    const icon = document.createElement('i');
+    switch(type) {
+        case 'success':
+            icon.className = 'fas fa-check-circle mr-2';
+            break;
+        case 'error':
+            icon.className = 'fas fa-exclamation-circle mr-2';
+            break;
+        case 'warning':
+            icon.className = 'fas fa-exclamation-triangle mr-2';
+            break;
+        case 'info':
+            icon.className = 'fas fa-info-circle mr-2';
+            break;
+    }
+    content.appendChild(icon);
+    
+    // Add message
+    const text = document.createElement('span');
+    text.textContent = message;
+    content.appendChild(text);
+    
+    toast.appendChild(content);
+    container.appendChild(toast);
+    
+    // Animate and remove
+    setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s ease-out forwards';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Initialize date range picker
+$(document).ready(function() {
+    // Initialize charts
+    initializeCharts();
+
+    // Get saved date range from localStorage or use default (last 30 days)
+    const savedStartDate = localStorage.getItem('revenueStartDate');
+    const savedEndDate = localStorage.getItem('revenueEndDate');
+    const savedGroupBy = localStorage.getItem('revenueGroupBy');
+    const savedCategory = localStorage.getItem('revenueCategory');
+    const savedAsin = localStorage.getItem('revenueAsin');
+
+    // Set default date range
+    const endDate = savedEndDate ? moment(savedEndDate) : moment();
+    const startDate = savedStartDate ? moment(savedStartDate) : moment().subtract(30, 'days');
+
+    // Initialize date range picker with saved or default values
+    $('#daterange').daterangepicker({
+        startDate: startDate,
+        endDate: endDate,
+        opens: 'left',
+        showDropdowns: true,
+        autoApply: false,
+        alwaysShowCalendars: true,
+        locale: {
+            format: 'YYYY-MM-DD',
+            applyLabel: "Apply",
+            cancelLabel: "Cancel",
+        }
+    });
+
+    // Restore other saved filters
+    if (savedGroupBy) {
+        $('#groupBy').val(savedGroupBy);
+    }
+    if (savedCategory) {
+        $('#category').val(savedCategory);
+    }
+    if (savedAsin) {
+        $('#asin').val(savedAsin);
+    }
+
+    // Save date range when changed
+    $('#daterange').on('apply.daterangepicker', function(ev, picker) {
+        localStorage.setItem('revenueStartDate', picker.startDate.format('YYYY-MM-DD'));
+        localStorage.setItem('revenueEndDate', picker.endDate.format('YYYY-MM-DD'));
+    });
+
+    // Save other filters when changed
+    $('#groupBy').on('change', function() {
+        localStorage.setItem('revenueGroupBy', $(this).val());
+    });
+
+    $('#category').on('change', function() {
+        localStorage.setItem('revenueCategory', $(this).val());
+    });
+
+    $('#asin').on('change', function() {
+        localStorage.setItem('revenueAsin', $(this).val());
+    });
+
+    // Handle filter application
+    $('#applyFilters').click(function() {
+        const dates = $('#daterange').data('daterangepicker');
+        const params = {
+            store_id: parseInt("{{ store_id }}"),
+            start_date: dates.startDate.format('YYYY-MM-DD'),
+            end_date: dates.endDate.format('YYYY-MM-DD'),
+            group_by: $('#groupBy').val(),
+            category: $('#category').val() || null,
+            asin: $('#asin').val() || null
+        };
+
+        // Show loading toast
+        showToast('Loading data...', 'info');
+
+        $.get('/analytics/api/revenue/trends', params)
+            .done(function(response) {
+                if (response.error) {
+                    showToast(response.error, 'error');
+                    return;
+                }
+                updateCharts(response);
+                showToast('Data updated successfully', 'success');
+            })
+            .fail(function(error) {
+                let errorMessage = 'An error occurred while fetching data.';
+                if (error.responseJSON && error.responseJSON.error) {
+                    errorMessage = error.responseJSON.error;
+                }
+                showToast(errorMessage, 'error');
+            });
+    });
+
+    // Add clear filters button
+    const clearButton = $('<button>', {
+        class: 'ml-2 px-4 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 focus:ring-4 focus:ring-gray-300 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700',
+        text: 'Clear Filters'
+    }).click(function() {
+        // Clear localStorage
+        localStorage.removeItem('revenueStartDate');
+        localStorage.removeItem('revenueEndDate');
+        localStorage.removeItem('revenueGroupBy');
+        localStorage.removeItem('revenueCategory');
+        localStorage.removeItem('revenueAsin');
+
+        // Reset filters to default
+        $('#daterange').data('daterangepicker').setStartDate(moment().subtract(30, 'days'));
+        $('#daterange').data('daterangepicker').setEndDate(moment());
+        $('#groupBy').val('daily');
+        $('#category').val('');
+        $('#asin').val('');
+
+        // Reload data
+        $('#applyFilters').click();
+    });
+
+    // Add clear button next to apply button
+    $('#applyFilters').parent().append(clearButton);
+
+    // Trigger initial load with saved or default values
+    $('#applyFilters').click();
+});
+</script>
+{% endblock %} 

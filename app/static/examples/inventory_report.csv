@@ -1,0 +1,2 @@
+store_id,date,sku,asin,product_name,condition,price,mfn_listing_exists,mfn_fulfillable_quantity,afn_listing_exists,afn_warehouse_quantity,afn_fulfillable_quantity,afn_unsellable_quantity,afn_reserved_quantity,afn_total_quantity,per_unit_volume
+1,2024-01-09,SKU123,B00TEST123,Test Ürün,New,29.99,true,5,true,100,95,2,3,100,1.5 

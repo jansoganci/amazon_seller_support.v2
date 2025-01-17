@@ -338,6 +338,111 @@ Returns the upload history for the current user.
 }
 ```
 
+### Return Reports
+
+#### GET /api/v1/stores/{store_id}/returns
+Get return reports for a specific store.
+
+**Parameters:**
+- `store_id` (path parameter, integer): ID of the store
+- `start_date` (query parameter, string): Start date in YYYY-MM-DD format
+- `end_date` (query parameter, string): End date in YYYY-MM-DD format
+
+**Response:**
+```json
+{
+  "status": "success",
+  "data": {
+    "returns": [
+      {
+        "return_date": "2025-01-09",
+        "order_id": "123-4567890-1234567",
+        "asin": "B00TEST123",
+        "title": "Test Product",
+        "quantity": 1,
+        "return_reason": "Size Issue",
+        "status": "Completed",
+        "refund_amount": 29.99
+      }
+    ],
+    "summary": {
+      "total_returns": 150,
+      "total_refund_amount": 4500.50,
+      "average_return_rate": 0.05
+    }
+  }
+}
+```
+
+### Inventory Reports
+
+#### GET /api/v1/stores/{store_id}/inventory
+Get inventory reports for a specific store.
+
+**Parameters:**
+- `store_id` (path parameter, integer): ID of the store
+- `date` (query parameter, string): Date in YYYY-MM-DD format
+
+**Response:**
+```json
+{
+  "status": "success",
+  "data": {
+    "inventory": [
+      {
+        "date": "2025-01-09",
+        "asin": "B00TEST123",
+        "product_name": "Test Product",
+        "price": 29.99,
+        "afn_fulfillable_quantity": 100,
+        "afn_reserved_quantity": 10,
+        "afn_total_quantity": 110,
+        "reorder_required": false
+      }
+    ],
+    "summary": {
+      "total_products": 500,
+      "total_value": 15000.50,
+      "low_stock_items": 25
+    }
+  }
+}
+```
+
+### Store Details
+
+#### GET /api/v1/stores/{store_id}/details
+Get detailed information about a specific store.
+
+**Parameters:**
+- `store_id` (path parameter, integer): ID of the store
+
+**Response:**
+```json
+{
+  "status": "success",
+  "data": {
+    "store_info": {
+      "id": 1,
+      "name": "My Store",
+      "marketplace": "US",
+      "created_at": "2025-01-09T13:51:43Z"
+    },
+    "performance_metrics": {
+      "total_revenue": 50000.00,
+      "total_orders": 1000,
+      "return_rate": 0.05,
+      "average_order_value": 50.00
+    },
+    "inventory_summary": {
+      "total_products": 500,
+      "low_stock_items": 25,
+      "out_of_stock_items": 10
+    }
+  }
+}
+```
+
 ## Error Responses
 All endpoints may return the following errors:
 
@@ -354,3 +459,96 @@ Common error codes:
 - `INVALID_REPORT`: Report validation failed
 - `INVALID_DATE`: Invalid date format
 - `SERVER_ERROR`: Internal server error
+
+## Analytics API
+
+### Get Revenue Trends
+Retrieve revenue trends for a specific store over a time period.
+
+**Endpoint:** `/analytics/api/revenue/trends`
+
+**Method:** GET
+
+**Parameters:**
+- `store_id` (integer, required): ID of the store
+- `start_date` (string, required): Start date in YYYY-MM-DD format
+- `end_date` (string, required): End date in YYYY-MM-DD format
+- `group_by` (string, optional): Time grouping (daily, weekly, monthly, quarterly, yearly). Default: daily
+- `category` (string, optional): Filter by main category
+
+**Response:**
+```json
+{
+    "labels": ["2024-01-01", "2024-01-02", ...],
+    "values": [1000.50, 1200.75, ...],
+    "total_revenue": 10000.00,
+    "growth_rate": 15.5,
+    "previous_period": {
+        "total_revenue": 8500.00
+    }
+}
+```
+
+**Error Responses:**
+- 400 Bad Request: Missing required parameters
+- 500 Internal Server Error: Processing error
+
+**Example Request:**
+```
+GET /analytics/api/revenue/trends?store_id=1&start_date=2024-01-01&end_date=2024-01-31&group_by=weekly&category=ELECTRONICS
+```
+
+## Revenue Trends API
+
+### GET /api/revenue/trends
+
+Get revenue trends data with various filtering and grouping options.
+
+#### Request Parameters
+
+| Parameter  | Type    | Required | Description                                           |
+|-----------|---------|----------|-------------------------------------------------------|
+| store_id  | integer | Yes      | Store ID to get data for                             |
+| start_date| string  | No       | Start date in YYYY-MM-DD format (defaults to 30 days ago) |
+| end_date  | string  | No       | End date in YYYY-MM-DD format (defaults to today)     |
+| group_by  | string  | No       | Grouping interval: daily, weekly, monthly, quarterly, yearly (default: daily) |
+| category  | string  | No       | Filter by category (use "All Categories" for no filter) |
+| asin      | string  | No       | Filter by ASIN (use "All ASINs" for no filter)       |
+
+#### Response Format
+
+```json
+{
+    "labels": ["2024-12-14", "2024-12-15", ...],
+    "values": [191979.16, 174633.93, ...],
+    "units": [1500, 1200, ...],
+    "sessions": [5000, 4800, ...],
+    "conversion_rates": [30.0, 25.0, ...],
+    "total_revenue": 366613.09,
+    "total_units": 2700,
+    "total_sessions": 9800,
+    "average_order_value": 135.78,
+    "growth_rate": 15.5,
+    "previous_period": 317413.50
+}
+```
+
+#### Notes
+- All dates are handled in UTC
+- Days with no sales will return 0 for all metrics
+- Revenue values are in store's currency
+- Conversion rates are percentages
+- Growth rate compares current period with previous period of same length
+
+#### Example Requests
+
+```bash
+# Get daily revenue for last 30 days
+curl -X GET '/api/revenue/trends?store_id=1'
+
+# Get weekly revenue for specific date range and category
+curl -X GET '/api/revenue/trends?store_id=1&start_date=2024-12-01&end_date=2024-12-31&group_by=weekly&category=Electronics'
+
+# Get monthly revenue for specific ASIN
+curl -X GET '/api/revenue/trends?store_id=1&group_by=monthly&asin=B01234567'
+```

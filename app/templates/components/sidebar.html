@@ -13,21 +13,41 @@
 
         <!-- Analytics -->
         <li>
-            <a href="{{ url_for('analytics.seasonal_analytics') }}" class="flex items-center p-2 text-base font-normal rounded-lg {% if request.endpoint == 'analytics.seasonal_analytics' %}bg-gray-100 dark:bg-gray-700 text-primary-600 dark:text-primary-400{% else %}text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700{% endif %}">
-                <svg class="w-6 h-6 {% if request.endpoint == 'analytics.seasonal_analytics' %}text-primary-600 dark:text-primary-400{% else %}text-gray-500 dark:text-gray-400{% endif %} transition duration-75 group-hover:text-gray-900 dark:group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z"></path>
+            <a href="{{ url_for('analytics.dashboard') }}" class="flex items-center p-2 text-base font-normal rounded-lg {% if request.endpoint == 'analytics.dashboard' %}bg-gray-100 dark:bg-gray-700 text-primary-600 dark:text-primary-400{% else %}text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700{% endif %}">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                 </svg>
                 <span class="ml-3">Analytics</span>
             </a>
         </li>
 
+        <!-- Stores -->
+        <li>
+            <a href="{{ url_for('settings.list_stores') }}" class="flex items-center p-2 text-base font-normal rounded-lg {% if request.endpoint == 'settings.list_stores' %}bg-gray-100 dark:bg-gray-700 text-primary-600 dark:text-primary-400{% else %}text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700{% endif %}">
+                <svg class="w-6 h-6 {% if request.endpoint == 'settings.list_stores' %}text-primary-600 dark:text-primary-400{% else %}text-gray-500 dark:text-gray-400{% endif %} transition duration-75 group-hover:text-gray-900 dark:group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1z M16 16V6a1 1 0 011-1h4a1 1 0 011 1v10a1 1 0 01-1 1h-4a1 1 0 01-1-1z"></path>
+                </svg>
+                <span class="ml-3">Stores</span>
+            </a>
+        </li>
+
         <!-- CSV Upload -->
         <li>
-            <a href="{{ url_for('analytics.upload_csv') }}" class="flex items-center p-2 text-base font-normal rounded-lg {% if request.endpoint == 'analytics.upload_csv' %}bg-gray-100 dark:bg-gray-700 text-primary-600 dark:text-primary-400{% else %}text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700{% endif %}">
-                <svg class="w-6 h-6 {% if request.endpoint == 'analytics.upload_csv' %}text-primary-600 dark:text-primary-400{% else %}text-gray-500 dark:text-gray-400{% endif %} transition duration-75 group-hover:text-gray-900 dark:group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <a href="{{ url_for('csv.upload') }}" class="flex items-center p-2 text-base font-normal rounded-lg {% if request.endpoint == 'csv.upload' %}bg-gray-100 dark:bg-gray-700 text-primary-600 dark:text-primary-400{% else %}text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700{% endif %}">
+                <svg class="w-6 h-6 {% if request.endpoint == 'csv.upload' %}text-primary-600 dark:text-primary-400{% else %}text-gray-500 dark:text-gray-400{% endif %} transition duration-75 group-hover:text-gray-900 dark:group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
                 <span class="ml-3">Upload CSV</span>
+            </a>
+        </li>
+
+        <!-- Business Reports -->
+        <li>
+            <a href="{{ url_for('analytics.list_business_reports') }}" class="flex items-center p-2 text-base font-normal rounded-lg {% if request.endpoint == 'analytics.list_business_reports' %}bg-gray-100 dark:bg-gray-700 text-primary-600 dark:text-primary-400{% else %}text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700{% endif %}">
+                <svg class="w-6 h-6 {% if request.endpoint == 'analytics.list_business_reports' %}text-primary-600 dark:text-primary-400{% else %}text-gray-500 dark:text-gray-400{% endif %} transition duration-75 group-hover:text-gray-900 dark:group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <span class="ml-3">Business Reports</span>
             </a>
         </li>
 

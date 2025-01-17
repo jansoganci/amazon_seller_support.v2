@@ -83,7 +83,31 @@ CREATE TABLE business_report (
     FOREIGN KEY (store_id) REFERENCES store (id)
 );
 
--- Similar tables for inventory_report, advertising_report, and return_report
+-- Advertising Reports
+CREATE TABLE advertising_report (
+    id INTEGER PRIMARY KEY,
+    store_id INTEGER NOT NULL,
+    date DATE NOT NULL,
+    campaign_name VARCHAR(100) NOT NULL,
+    ad_group_name VARCHAR(100) NOT NULL,
+    targeting_type VARCHAR(50) NOT NULL,
+    match_type VARCHAR(50) NOT NULL,
+    search_term VARCHAR(200) NOT NULL,
+    impressions INTEGER NOT NULL,
+    clicks INTEGER NOT NULL,
+    ctr NUMERIC(7,4) NOT NULL,
+    cpc NUMERIC(10,2) NOT NULL,
+    spend NUMERIC(10,2) NOT NULL,
+    total_sales NUMERIC(10,2) NOT NULL,
+    acos NUMERIC(7,4) NOT NULL,
+    total_orders INTEGER NOT NULL,
+    total_units INTEGER NOT NULL,
+    conversion_rate NUMERIC(7,4) NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (store_id) REFERENCES store (id)
+);
+
+-- Similar tables for inventory_report and return_report
 ```
 
 ## Key Components
@@ -293,3 +317,191 @@ SECRET_KEY=your-secret-key
 - Redis for session storage
 - Query result caching
 - API response caching
+
+### CSV Format Specifications
+
+#### Business Report
+- Required columns: store_id, date, sku, asin, title, sessions, units_ordered, ordered_product_sales, total_order_items, conversion_rate
+- Date format: YYYY-MM-DD
+- Numeric precision: 2 decimal places for monetary values, 4 decimal places for rates
+
+#### Advertising Report
+- Required columns: store_id, date, campaign_name, ad_group_name, targeting_type, match_type, search_term, impressions, clicks, ctr, cpc, spend, total_sales, acos, total_orders, total_units, conversion_rate
+- Date format: YYYY-MM-DD
+- Numeric precision:
+  - 4 decimal places: ctr, acos, conversion_rate
+  - 2 decimal places: cpc, spend, total_sales
+  - Integer: impressions, clicks, total_orders, total_units
+
+#### Data Validation Rules
+1. Store ID must exist and belong to the current user
+2. Date must be a valid date in YYYY-MM-DD format
+3. Numeric fields must be non-negative
+4. Text fields must not exceed their maximum lengths
+5. Required fields must not be empty
+6. Decimal precision must match the specified format
+
+### Store Management
+- User-Store relationship implemented
+- Auto-incrementing store IDs
+- Store detail page with performance metrics
+- Store-level permissions and access control
+
+### CSV Processing
+- Return Report integration completed
+  - Return rate calculation
+  - Customer feedback analysis
+  - Return reason categorization
+- Inventory Report integration completed
+  - Stock level monitoring
+  - Reorder point calculation
+  - Warehouse distribution tracking
+
+### Database Schema Updates
+```sql
+-- Return Reports
+CREATE TABLE return_reports (
+    id INTEGER PRIMARY KEY,
+    store_id INTEGER NOT NULL,
+    return_date DATE NOT NULL,
+    order_id VARCHAR(50) NOT NULL,
+    sku VARCHAR(50) NOT NULL,
+    asin VARCHAR(10) NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    quantity INTEGER NOT NULL,
+    return_reason TEXT,
+    status VARCHAR(50),
+    refund_amount DECIMAL(10,2),
+    return_center VARCHAR(100),
+    return_carrier VARCHAR(100),
+    tracking_number VARCHAR(100),
+    FOREIGN KEY (store_id) REFERENCES store (id)
+);
+
+-- Inventory Reports
+CREATE TABLE inventory_reports (
+    id INTEGER PRIMARY KEY,
+    store_id INTEGER NOT NULL,
+    date DATE NOT NULL,
+    sku VARCHAR(50) NOT NULL,
+    asin VARCHAR(10) NOT NULL,
+    product_name VARCHAR(200) NOT NULL,
+    condition VARCHAR(50),
+    price DECIMAL(10,2),
+    mfn_listing_exists BOOLEAN,
+    mfn_fulfillable_quantity INTEGER,
+    afn_listing_exists BOOLEAN,
+    afn_warehouse_quantity INTEGER,
+    afn_fulfillable_quantity INTEGER,
+    afn_unsellable_quantity INTEGER,
+    afn_reserved_quantity INTEGER,
+    afn_total_quantity INTEGER,
+    per_unit_volume DECIMAL(10,2),
+    FOREIGN KEY (store_id) REFERENCES store (id)
+);
+```
+
+### Performance Optimizations
+- Added indexes for return_date and asin in return_reports
+- Added indexes for date and sku in inventory_reports
+- Optimized CSV validation process
+
+## Database Access
+### SQL Query Structure
+- Direct SQL queries are used instead of SQLAlchemy ORM for better performance with pandas
+- All SQL queries are parameterized using SQLAlchemy text() to prevent SQL injection
+- Query parameters are always bound using dictionary format
+
+Example:
+```sql
+sql = text("""
+    SELECT date, ordered_product_sales
+    FROM business_report
+    WHERE store_id = :store_id
+    AND date >= :start_date
+    AND date <= :end_date
+    ORDER BY date
+""")
+
+df = pd.read_sql(
+    sql,
+    db.session.bind,
+    params={
+        'store_id': store_id,
+        'start_date': start_date,
+        'end_date': end_date
+    }
+)
+```
+
+## Category Management
+### ASIN-Category Mapping
+- Categories are managed through a JSON file (`data/asin_categories.json`)
+- No database storage for categories to reduce customer input requirements
+- Categories are dynamically mapped using ASIN lookup
+- Two-level category structure: Main Category and Subcategory
+
+Example JSON structure:
+```json
+{
+    "B07EXAMPLE1": {
+        "main_category": "ELECTRONICS",
+        "sub_category": "PC"
+    }
+}
+```
+
+### Category Retrieval Process
+1. Get ASIN from Business Report
+2. Look up category in JSON file
+3. Default to ELECTRONICS/ALL_ELECTRONICS if ASIN not found
+4. Cache frequently accessed mappings for performance
+
+## Analytics Engine
+
+### Revenue Trends API
+
+#### Date Filtering
+The revenue trends API now uses proper date filtering with the following improvements:
+- Uses the `date` column instead of `created_at` for all queries
+- Handles days with no sales using recursive CTE
+- Supports daily, weekly, monthly, quarterly, and yearly grouping
+- Properly formats dates for SQL queries
+
+Example SQL query for daily revenue trends:
+```sql
+WITH RECURSIVE dates(date) AS (
+    SELECT date(:start_date)
+    UNION ALL
+    SELECT date(date, '+1 day')
+    FROM dates
+    WHERE date < date(:end_date)
+)
+SELECT 
+    dates.date as date_group,
+    COALESCE(SUM(CAST(REPLACE(REPLACE(ordered_product_sales, '$', ''), ',', '') AS FLOAT)), 0) as revenue,
+    COALESCE(SUM(units_ordered), 0) as units,
+    COALESCE(SUM(sessions), 0) as sessions,
+    CASE 
+        WHEN COALESCE(SUM(sessions), 0) = 0 THEN 0 
+        ELSE CAST(COALESCE(SUM(units_ordered), 0) AS FLOAT) / COALESCE(SUM(sessions), 0) * 100 
+    END as conversion_rate
+FROM dates
+LEFT JOIN business_report ON 
+    DATE(business_report.date) = dates.date
+    AND business_report.store_id = :store_id
+GROUP BY date_group
+ORDER BY date_group
+```
+
+#### Category and ASIN Filtering
+- Category filtering is done by matching ASINs to categories
+- ASIN filtering supports both single ASIN and category-based ASIN lists
+- Proper SQL parameter binding for security
+
+#### Metrics Calculation
+- Revenue: Sum of ordered product sales
+- Units: Sum of units ordered
+- Sessions: Sum of sessions
+- Conversion Rate: (Units / Sessions) * 100
+- Growth Rate: ((Current Period Revenue - Previous Period Revenue) / Previous Period Revenue) * 100

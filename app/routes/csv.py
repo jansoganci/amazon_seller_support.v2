@@ -15,249 +15,189 @@ logger = logging.getLogger(__name__)
 
 bp = Blueprint('csv', __name__)
 
-def save_report_data(df, report_type):
-    """CSV verilerini ilgili rapor tablosuna kaydeder"""
+def save_report_data(df, report_type, user_id):
+    """CSV verilerini veritabanına kaydet"""
     try:
-        for _, row in df.iterrows():
-            if report_type == 'store':
-                # Mağaza var mı kontrol et
-                store = Store.query.filter_by(id=row['store_id']).first()
-                if store:
-                    # Mağaza varsa güncelle
-                    store.name = row['store_name']
-                    store.region = row.get('store_region')  # Opsiyonel alan
-                else:
-                    # Mağaza yoksa yeni ekle
-                    store = Store(
-                        id=row['store_id'],
-                        name=row['store_name'],
-                        region=row.get('store_region'),
-                        user_id=current_user.id
-                    )
-                    db.session.add(store)
+        # Store ID kontrolü
+        store_ids = df['store_id'].unique()
+        logger.info(f"CSV'deki store ID'ler: {store_ids}")
+        logger.info(f"Kullanıcı ID: {user_id}")
+        
+        # Kullanıcının store'larını kontrol et
+        user_stores = Store.query.filter_by(user_id=user_id).all()
+        logger.info(f"Kullanıcının store'ları:")
+        for store in user_stores:
+            logger.info(f"Store ID: {store.id}, İsim: {store.name}, User ID: {store.user_id}")
+        
+        user_store_ids = [store.id for store in user_stores]
+        invalid_stores = [str(id) for id in store_ids if id not in user_store_ids]
+        
+        if invalid_stores:
+            error_msg = f"Store ID {', '.join(invalid_stores)} bulunamadı veya erişim izniniz yok. "
+            error_msg += f"Sizin store ID'leriniz: {', '.join(map(str, user_store_ids))}"
+            logger.error(error_msg)
+            return False, error_msg
 
-            elif report_type == 'business_report':
-                # Duplike kontrolü
+        # Rapor tipine göre kaydetme işlemi
+        if report_type == 'business_report':
+            # Önce mevcut kayıtları kontrol et
+            for _, row in df.iterrows():
                 existing = BusinessReport.query.filter_by(
                     store_id=row['store_id'],
-                    asin=row['asin'],
-                    units_sold=row['units_sold'],
-                    revenue=row['revenue'],
-                    returns=row['returns'],
-                    conversion_rate=row['conversion_rate'],
-                    page_views=row['page_views'],
-                    sessions=row['sessions']
+                    date=row['date'],
+                    asin=row['asin']
                 ).first()
-                if existing:
-                    return False, 'Bu rapor zaten yüklenmiş'
-                    
-                report = BusinessReport(
-                    store_id=row['store_id'],
-                    asin=row['asin'],
-                    title=row['title'],
-                    units_sold=row['units_sold'],
-                    revenue=row['revenue'],
-                    returns=row['returns'],
-                    conversion_rate=row['conversion_rate'],
-                    page_views=row['page_views'],
-                    sessions=row['sessions']
-                )
-                db.session.add(report)
+                
+                if not existing:
+                    report = BusinessReport(
+                        store_id=row['store_id'],
+                        date=row['date'],
+                        sku=row['sku'],
+                        asin=row['asin'],
+                        title=row['title'],
+                        sessions=row['sessions'],
+                        units_ordered=row['units_ordered'],
+                        ordered_product_sales=row['ordered_product_sales'],
+                        total_order_items=row['total_order_items'],
+                        conversion_rate=row['conversion_rate']
+                    )
+                    db.session.add(report)
 
-            elif report_type == 'advertising_report':
-                # Duplike kontrolü
-                existing = AdvertisingReport.query.filter_by(
-                    store_id=row['store_id'],
-                    campaign_name=row['campaign_name'],
-                    impressions=row['impressions'],
-                    clicks=row['clicks'],
-                    cost=row['cost'],
-                    sales=row['sales'],
-                    acos=row['acos'],
-                    roi=row['roi']
-                ).first()
-                if existing:
-                    return False, 'Bu rapor zaten yüklenmiş'
-                    
+        elif report_type == 'advertising_report':
+            for _, row in df.iterrows():
                 report = AdvertisingReport(
                     store_id=row['store_id'],
+                    date=row['date'],
                     campaign_name=row['campaign_name'],
+                    ad_group_name=row['ad_group_name'],
+                    targeting_type=row['targeting_type'],
+                    match_type=row['match_type'],
+                    search_term=row['search_term'],
                     impressions=row['impressions'],
                     clicks=row['clicks'],
-                    cost=row['cost'],
-                    sales=row['sales'],
+                    ctr=row['ctr'],
+                    cpc=row['cpc'],
+                    spend=row['spend'],
+                    total_sales=row['total_sales'],
                     acos=row['acos'],
-                    roi=row['roi']
+                    total_orders=row['total_orders'],
+                    total_units=row['total_units'],
+                    conversion_rate=row['conversion_rate']
                 )
                 db.session.add(report)
 
-            elif report_type == 'return_report':
-                # Duplike kontrolü
-                existing = ReturnReport.query.filter_by(
-                    store_id=row['store_id'],
-                    asin=row['asin'],
-                    return_reason=row['return_reason'],
-                    return_count=row['return_count'],
-                    total_units_sold=row['total_units_sold'],
-                    return_rate=row['return_rate']
-                ).first()
-                if existing:
-                    return False, 'Bu rapor zaten yüklenmiş'
-                    
-                report = ReturnReport(
-                    store_id=row['store_id'],
-                    asin=row['asin'],
-                    title=row['title'],
-                    return_reason=row['return_reason'],
-                    return_count=row['return_count'],
-                    total_units_sold=row['total_units_sold'],
-                    return_rate=row['return_rate'],
-                    customer_feedback=row.get('customer_feedback')  # Opsiyonel alan
-                )
-                db.session.add(report)
-
-            elif report_type == 'inventory_report':
-                # Duplike kontrolü
-                existing = InventoryReport.query.filter_by(
-                    store_id=row['store_id'],
-                    asin=row['asin'],
-                    units_available=row['units_available'],
-                    units_inbound=row['units_inbound'],
-                    units_reserved=row['units_reserved'],
-                    units_total=row['units_total']
-                ).first()
-                if existing:
-                    return False, 'Bu rapor zaten yüklenmiş'
-                    
+        elif report_type == 'inventory_report':
+            for _, row in df.iterrows():
                 report = InventoryReport(
                     store_id=row['store_id'],
+                    date=row['date'],
+                    sku=row['sku'],
+                    asin=row['asin'],
+                    product_name=row['product_name'],
+                    condition=row['condition'],
+                    price=row['price'],
+                    mfn_listing_exists=row['mfn_listing_exists'],
+                    mfn_fulfillable_quantity=row['mfn_fulfillable_quantity'],
+                    afn_listing_exists=row['afn_listing_exists'],
+                    afn_warehouse_quantity=row['afn_warehouse_quantity'],
+                    afn_fulfillable_quantity=row['afn_fulfillable_quantity'],
+                    afn_unsellable_quantity=row['afn_unsellable_quantity'],
+                    afn_reserved_quantity=row['afn_reserved_quantity'],
+                    afn_total_quantity=row['afn_total_quantity'],
+                    per_unit_volume=row['per_unit_volume']
+                )
+                db.session.add(report)
+
+        elif report_type == 'return_report':
+            for _, row in df.iterrows():
+                report = ReturnReport(
+                    store_id=row['store_id'],
+                    return_date=row['return_date'],
+                    order_id=row['order_id'],
+                    sku=row['sku'],
                     asin=row['asin'],
                     title=row['title'],
-                    units_available=row['units_available'],
-                    units_inbound=row['units_inbound'],
-                    units_reserved=row['units_reserved'],
-                    units_total=row['units_total'],
-                    reorder_required=row['reorder_required']
+                    quantity=row['quantity'],
+                    return_reason=row['return_reason'],
+                    status=row['status'],
+                    refund_amount=row['refund_amount'],
+                    return_center=row['return_center'],
+                    return_carrier=row['return_carrier'],
+                    tracking_number=row['tracking_number']
                 )
                 db.session.add(report)
 
         db.session.commit()
-        return True, None
-        
+        return True, "Veriler başarıyla kaydedildi."
+
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Veri kaydetme hatası: {str(e)}", exc_info=True)
-        return False, f'Veri kaydetme hatası: {str(e)}'
+        logger.error(f"Veri kaydetme hatası: {str(e)}")
+        logger.error(f"Kullanıcı ID: {user_id}")
+        logger.error(f"Store ID'ler: {store_ids}")
+        return False, f"Veri kaydetme hatası: {str(e)}"
 
-@bp.route('/csv/upload', methods=['GET', 'POST'])
+@bp.route('/upload', methods=['GET', 'POST'])
 @login_required
 def upload():
-    """CSV dosyası yükleme sayfası"""
     if request.method == 'POST':
-        try:
-            # Dosya kontrolü
-            if 'file' not in request.files:
-                flash('Dosya seçilmedi', 'danger')
-                return redirect(request.url)
-                
-            file = request.files['file']
-            report_type = request.form.get('report_type')
-            
-            # Temel kontroller
-            if file.filename == '':
-                flash('Dosya seçilmedi', 'danger')
-                return redirect(request.url)
-                
-            if not report_type:
-                flash('Lütfen rapor tipini seçin', 'danger')
-                return redirect(request.url)
-                
-            if not file.filename.lower().endswith('.csv'):
-                flash('Sadece CSV dosyaları kabul edilmektedir', 'danger')
-                return redirect(request.url)
-            
-            # CSV doğrulama
-            validator = CSVValidator()
-            logger.info(f"CSV doğrulama başlıyor: {file.filename}, tip: {report_type}")
-            is_valid, error_message, metadata = validator.validate_csv(file, report_type)
-            logger.info(f"CSV doğrulama sonucu: valid={is_valid}, error={error_message}, metadata={metadata}")
-            
-            if not is_valid:
-                flash(f'CSV doğrulama hatası: {error_message}', 'danger')
-                return redirect(request.url)
-            
-            # Veri kaydetme
-            try:
-                # CSV verilerini kaydet
-                logger.info("CSV verileri kaydediliyor...")
-                save_report_data(metadata['transformed_data'], report_type)
-                logger.info("CSV verileri başarıyla kaydedildi")
-                
-                # CSV dosya kaydını oluştur
-                store_id = metadata['store_ids'][0] if metadata['store_ids'] else None
-                logger.info(f"Store ID: {store_id}")
-                
-                if not store_id:
-                    flash('Store ID bulunamadı', 'danger')
-                    return redirect(request.url)
-                    
-                csv_file = CSVFile(
-                    filename=secure_filename(file.filename),
-                    file_type=report_type,
-                    status='success',
-                    user_id=current_user.id,
-                    store_id=store_id,
-                    row_count=metadata['row_count']
-                )
-                logger.info(f"CSV dosya kaydı oluşturuluyor: {csv_file}")
-                db.session.add(csv_file)
-                db.session.commit()
-                logger.info("CSV dosya kaydı başarıyla oluşturuldu")
-                
-                flash(f'{file.filename} başarıyla yüklendi ve işlendi', 'success')
-            except Exception as e:
-                logger.error(f"Veri kaydetme hatası: {str(e)}", exc_info=True)
-                # Hata durumunda CSV dosya kaydını oluştur
-                store_id = metadata['store_ids'][0] if metadata['store_ids'] else None
-                if store_id:
-                    csv_file = CSVFile(
-                        filename=secure_filename(file.filename),
-                        file_type=report_type,
-                        status='error',
-                        error_message=str(e),
-                        user_id=current_user.id,
-                        store_id=store_id,
-                        row_count=metadata.get('row_count', 0)
-                    )
-                    db.session.add(csv_file)
-                    db.session.commit()
-                
-                flash(f'Veri kaydedilirken hata oluştu: {str(e)}', 'danger')
-                return redirect(request.url)
-                
-            return redirect(url_for('csv.upload'))
-            
-        except pd.errors.EmptyDataError:
-            flash('CSV dosyası boş', 'danger')
-            return redirect(request.url)
-        except pd.errors.ParserError:
-            flash('CSV dosyası okunamadı. Lütfen dosya formatını kontrol edin', 'danger')
-            return redirect(request.url)
-        except Exception as e:
-            logger.error(f"CSV yükleme hatası: {str(e)}")
-            flash(f'Beklenmeyen bir hata oluştu: {str(e)}', 'danger')
-            return redirect(request.url)
-    
-    # GET request - form sayfasını göster
-    report_types = [
-        'business_report',
-        'inventory_report',
-        'advertising_report',
-        'return_report'
-    ]
-    
-    # Yükleme geçmişini al
-    uploads = CSVFile.query.filter_by(user_id=current_user.id).order_by(CSVFile.upload_date.desc()).all()
-    logger.info(f"Yükleme geçmişi: {len(uploads)} kayıt bulundu")
-    
-    return render_template('csv/upload.html', report_types=report_types, uploads=uploads)
+        logger.info(f"Upload sayfası açıldı - User: {current_user.email}")
+        logger.info("==================== YENİ UPLOAD İSTEĞİ ====================")
+        logger.info(f"Kullanıcı: {current_user.email} (ID: {current_user.id})")
+        logger.info(f"Request Data: {request.form}")
+        logger.info(f"Files: {request.files}")
+
+        # Rapor tipi kontrolü
+        report_type = request.form.get('report_type')
+        if not report_type:
+            flash('Lütfen bir rapor tipi seçin.', 'error')
+            return redirect(url_for('analytics.upload_csv'))
+
+        # Dosya kontrolü
+        if 'file' not in request.files:
+            flash('Dosya seçilmedi. Lütfen bir CSV dosyası seçin.', 'error')
+            return redirect(url_for('analytics.upload_csv'))
+
+        file = request.files['file']
+        if not file.filename:
+            flash('Dosya seçilmedi. Lütfen bir CSV dosyası seçin.', 'error')
+            return redirect(url_for('analytics.upload_csv'))
+
+        if not file.filename.endswith('.csv'):
+            flash('Sadece CSV dosyaları yüklenebilir.', 'error')
+            return redirect(url_for('analytics.upload_csv'))
+
+        logger.info(f"Rapor Tipi: {report_type}")
+        logger.info(f"Dosya Adı: {file.filename}")
+
+        # CSV içeriğini logla
+        file_content = file.read().decode('utf-8')[:500]  # İlk 500 karakter
+        logger.info(f"CSV İçeriği (ilk 500 karakter):\n{file_content}")
+        file.seek(0)  # Dosya pointer'ı başa al
+
+        logger.info("CSV doğrulama başlıyor...")
+        success, message, metadata = CSVValidator.validate_csv(file, report_type)
+
+        if not success:
+            error_message = f"CSV Doğrulama Hatası: {message}"
+            logger.error(error_message)
+            flash(error_message, 'error')
+            return redirect(url_for('analytics.upload_csv'))
+
+        logger.info("CSV doğrulama başarılı!")
+        logger.info(f"Metadata: {metadata}")
+
+        logger.info("Veri kaydetme başlıyor...")
+        success, message = save_report_data(metadata['transformed_data'], report_type, current_user.id)
+
+        if not success:
+            error_message = f"Veri kaydetme hatası: {message}"
+            logger.error(error_message)
+            flash(error_message, 'error')
+            return redirect(url_for('analytics.upload_csv'))
+
+        logger.info(f"Veri kaydetme başarılı: {message}")
+        flash('CSV dosyası başarıyla yüklendi ve işlendi.', 'success')
+        return redirect(url_for('analytics.upload_csv'))
+
+    return render_template('csv/upload.html', report_types=['business_report', 'advertising_report', 'inventory_report', 'return_report'])
