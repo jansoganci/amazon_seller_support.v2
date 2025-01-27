@@ -1,74 +1,99 @@
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
-from flask_migrate import Migrate
+"""Flask application factory."""
+
 import os
-from datetime import timedelta
-import logging
+from flask import Flask, redirect, url_for
+from flask_login import current_user
+from app.extensions import db, migrate, login_manager, limiter
+from jinja2 import ChoiceLoader, FileSystemLoader
 
-db = SQLAlchemy()
-login_manager = LoginManager()
-migrate = Migrate()
-
-def create_app(config_name=None):
+def create_app(config_object=None):
+    """Create Flask application."""
     app = Flask(__name__)
-    
-    # Logging ayarları
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
-    
-    # Konfigürasyon
-    if config_name == 'testing':
-        app.config['SECRET_KEY'] = 'test'
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-        app.config['TESTING'] = True
-        app.config['WTF_CSRF_ENABLED'] = False
-        app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), '..', 'tests', 'test_uploads')
+
+    # Configure template loader to include both app/templates and app/core/templates
+    template_dirs = [
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates'),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), 'core/templates')
+    ]
+    app.jinja_loader = ChoiceLoader([
+        FileSystemLoader(template_dirs),
+        app.jinja_loader
+    ])
+
+    if config_object:
+        if isinstance(config_object, dict):
+            app.config.update(config_object)
+        else:
+            app.config.from_object(config_object)
     else:
-        app.config['SECRET_KEY'] = 'dev'  # Geliştirme için geçici key
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+        app.config['SECRET_KEY'] = 'dev'
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///amazon_seller.db'
         app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB max-limit
-        app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=31)
-        app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=31)
-        app.config['SESSION_PROTECTION'] = 'strong'
-    
-    # Upload klasörü oluştur
-    if not os.path.exists(app.config.get('UPLOAD_FOLDER', 'uploads')):
-        os.makedirs(app.config.get('UPLOAD_FOLDER', 'uploads'))
-    
-    # Eklentilerin başlatılması
+        app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB max file size
+        app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
+
+    # Initialize extensions
     db.init_app(app)
-    login_manager.init_app(app)
     migrate.init_app(app, db)
+    login_manager.init_app(app)
+    limiter.init_app(app)
+
     login_manager.login_view = 'auth.login'
-    login_manager.session_protection = 'strong'
+    login_manager.login_message = 'Please log in to access this page.'
+
+    # Import models
+    from app.models import User
+    from app.modules.business.models import BusinessReport
+    from app.modules.category.models.category import Category, ASINKategori
+
+    @login_manager.user_loader
+    def load_user(id):
+        return User.query.get(int(id))
+
+    @app.route('/')
+    def index():
+        if current_user.is_authenticated:
+            return redirect(url_for('dashboard.index'))
+        return redirect(url_for('auth.login'))
+
+    # Create upload folder if it doesn't exist
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+    # Register blueprints and extensions
+    from app.modules import business, category
     
-    # Shell context'i için login_manager'ı hazırla
-    @app.shell_context_processor
-    def make_shell_context():
-        return {
-            'db': db,
-            'User': User,
-            'Store': Store,
-            'login_manager': login_manager
-        }
-    
-    with app.app_context():
-        # Model importları
-        from app.models.user import User
-        from app.models.store import Store
-        from app.models.csv_file import CSVFile
-        from app.models.reports import BusinessReport, AdvertisingReport, ReturnReport, InventoryReport
-        
-        # Blueprint'lerin kaydedilmesi
-        from app.routes import main, auth, csv, settings, analytics
-        app.register_blueprint(auth.bp)
-        app.register_blueprint(main.bp)
-        app.register_blueprint(csv.bp)
-        app.register_blueprint(settings.bp)
-        app.register_blueprint(analytics.bp, url_prefix='/analytics')
-    
+    business.init_app(app)
+    category.init_app(app)
+
+    # Register dashboard blueprint
+    from app.modules.dashboard.routes import bp as dashboard_bp
+    app.register_blueprint(dashboard_bp)
+
+    # Register stores blueprint
+    from app.modules.stores.routes import bp as stores_bp
+    app.register_blueprint(stores_bp)
+
+    # Register upload_csv blueprint
+    from app.modules.upload_csv.routes import bp as upload_csv_bp
+    app.register_blueprint(upload_csv_bp)
+
+    # Register uploaded_data blueprint
+    from app.modules.uploaded_data.routes import bp as uploaded_data_bp
+    app.register_blueprint(uploaded_data_bp)
+
+    # Register settings blueprint
+    from app.modules.settings.routes import bp as settings_bp
+    app.register_blueprint(settings_bp)
+
+    # Register analytics blueprint
+    from app.modules.analytics.routes import bp as analytics_bp
+    app.register_blueprint(analytics_bp)
+
+    # Register auth blueprint
+    from app.modules.auth.routes import bp as auth_bp
+    app.register_blueprint(auth_bp, url_prefix='/auth')
+
     return app
+
+# Export db and migrate objects
+__all__ = ['create_app', 'db', 'migrate', 'login_manager']

@@ -1,0 +1,8 @@
+Date,ASIN,Title,Category,Invalid Column,Ordered Product Sales,Units Ordered
+2024-01-01,INVALID,Test Product,Invalid Category,Invalid Value,not a number,not a number
+2024-13-01,B00TEST1,,,Electronics,-100.00,-5
+,B00TEST2,Test Product,Electronics,Gadgets,1000.00,10
+2024-01-01,,Test Product,Electronics,Gadgets,1000.00,10
+2024-01-01,B00TEST3,,Electronics,Gadgets,1000.00,10
+2024-01-01,B00TEST4,Test Product,,Gadgets,1000.00,10
+2024-01-01,B00TEST5,Test Product,Electronics,,1000.00,10

@@ -1,0 +1,8 @@
+{% macro chart_container(title, chart_id, height='h-96') %}
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">{{ title }}</h3>
+    <div class="{{ height }}">
+        <canvas id="{{ chart_id }}"></canvas>
+    </div>
+</div>
+{% endmacro %} 

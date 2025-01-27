@@ -12,10 +12,9 @@ import calendar
 import pandas as pd
 
 from sqlalchemy import func, extract, and_, text
-from app.models.reports import BusinessReport, InventoryReport
-from app.models.store import Store
+from app.modules.business.models import BusinessReport
 from app.utils.data_validator import DataValidator
-from app import db
+from app.extensions import db
 
 class TimeGrouping(Enum):
     """Zaman bazlı gruplandırma seçenekleri."""

@@ -1,2 +1,2 @@
 store_id,date,campaign_name,ad_group_name,targeting_type,match_type,search_term,impressions,clicks,ctr,cpc,spend,total_sales,acos,total_orders,total_units,conversion_rate
-1,2024-01-09,Test Campaign,Test Ad Group,Keyword,Exact,test keyword,1000,100,0.1000,0.50,50.00,200.00,0.2500,10,15,0.0150 
+1,2024-01-09,Test Campaign,Test Ad Group,Keyword,Exact,test keyword,1000,100,0.1000,0.50,50.00,200.00,0.2500,10,15,0.0150

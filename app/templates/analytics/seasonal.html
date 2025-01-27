@@ -1,78 +1,78 @@
-{% extends 'base_tailwind.html' %}
-
-{% block title %}Seasonal Analytics{% endblock %}
-
-{% block head %}
+{% extends 'base_tailwind.html' %} {% block title %}Seasonal Analytics{%
+endblock %} {% block head %}
 <!-- Add Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-{% endblock %}
-
-{% block content %}
+{% endblock %} {% block content %}
 <!-- Hidden input for store ID -->
-<input type="hidden" id="store-id" value="{{ store_id|default('') }}">
+<input type="hidden" id="store-id" value="{{ store_id|default('') }}" />
 
 <div class="container mx-auto px-4">
-    <h1 class="text-2xl font-semibold mb-6">Seasonal Analytics</h1>
+  <h1 class="text-2xl font-semibold mb-6">Seasonal Analytics</h1>
 
-    <!-- Analysis Type Selector -->
-    <div class="mb-6">
-        <label for="analysis-type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Analysis Type</label>
-        <select id="analysis-type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
-            <option value="weekly">Weekly Analysis</option>
-            <option value="monthly" selected>Monthly Analysis</option>
-            <option value="quarterly">Quarterly Analysis</option>
-            <option value="yearly">Yearly Analysis</option>
-        </select>
+  <!-- Analysis Type Selector -->
+  <div class="mb-6">
+    <label
+      for="analysis-type"
+      class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >Analysis Type</label
+    >
+    <select
+      id="analysis-type"
+      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+    >
+      <option value="weekly">Weekly Analysis</option>
+      <option value="monthly" selected>Monthly Analysis</option>
+      <option value="quarterly">Quarterly Analysis</option>
+      <option value="yearly">Yearly Analysis</option>
+    </select>
+  </div>
+
+  <!-- Charts Container -->
+  <div id="charts-container" class="space-y-6">
+    <!-- Revenue Trend Chart -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <h2 class="text-xl font-semibold mb-4">Revenue Trend</h2>
+      <div class="h-96">
+        <canvas id="revenueTrendChart"></canvas>
+      </div>
     </div>
 
-    <!-- Charts Container -->
-    <div id="charts-container" class="space-y-6">
-        <!-- Revenue Trend Chart -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h2 class="text-xl font-semibold mb-4">Revenue Trend</h2>
-            <div class="h-96">
-                <canvas id="revenueTrendChart"></canvas>
-            </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Peak Periods -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold mb-4">Peak Periods</h2>
+        <div class="h-64">
+          <canvas id="peakPeriodsChart"></canvas>
         </div>
+      </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Peak Periods -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 class="text-xl font-semibold mb-4">Peak Periods</h2>
-                <div class="h-64">
-                    <canvas id="peakPeriodsChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Year over Year -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 class="text-xl font-semibold mb-4">Year over Year</h2>
-                <div class="h-64">
-                    <canvas id="yearOverYearChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Special Periods -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 class="text-xl font-semibold mb-4">Special Periods</h2>
-                <div class="h-64">
-                    <canvas id="specialPeriodsChart"></canvas>
-                </div>
-            </div>
+      <!-- Year over Year -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold mb-4">Year over Year</h2>
+        <div class="h-64">
+          <canvas id="yearOverYearChart"></canvas>
         </div>
+      </div>
+
+      <!-- Special Periods -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold mb-4">Special Periods</h2>
+        <div class="h-64">
+          <canvas id="specialPeriodsChart"></canvas>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
+{% endblock %} {% block scripts %}
 <script>
-    // Get store ID from hidden input
-    const storeIdInput = document.getElementById('store-id');
-    const store_id = storeIdInput.value ? parseInt(storeIdInput.value) : null;
-    
-    // If no store is selected, show a message
-    if (!store_id) {
-        document.getElementById('charts-container').innerHTML = `
+  // Get store ID from hidden input
+  const storeIdInput = document.getElementById("store-id");
+  const store_id = storeIdInput.value ? parseInt(storeIdInput.value) : null;
+
+  // If no store is selected, show a message
+  if (!store_id) {
+    document.getElementById("charts-container").innerHTML = `
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                 <div class="text-center py-12">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">No Store Selected</h3>
@@ -80,37 +80,44 @@
                 </div>
             </div>
         `;
-    } else {
-        // Chart initialization and data fetching
-        const analysisType = document.getElementById('analysis-type');
-        
-        // Function to update all charts
-        async function updateCharts(seasonType) {
-            try {
-                // Fetch seasonal analytics data
-                const response = await fetch(`/analytics/api/v1/analytics/seasonal/${store_id}?season_type=${seasonType}`);
-                const data = await response.json();
-                
-                if (response.ok) {
-                    // Check if data exists and has the correct structure
-                    if (data && data.revenue_trend && data.revenue_trend.labels && data.revenue_trend.values) {
-                        // Update Revenue Trend Chart
-                        updateRevenueTrendChart(data.revenue_trend);
-                        
-                        // Fetch and update other charts
-                        updatePeakPeriodsChart();
-                        updateYearOverYearChart();
-                        updateSpecialPeriodsChart();
-                    } else {
-                        throw new Error('Invalid data structure received from server');
-                    }
-                } else {
-                    throw new Error(data.error || 'Failed to fetch analytics data');
-                }
-            } catch (error) {
-                console.error('Error updating charts:', error);
-                // Show error message to user
-                document.getElementById('charts-container').innerHTML = `
+  } else {
+    // Chart initialization and data fetching
+    const analysisType = document.getElementById("analysis-type");
+
+    // Function to update all charts
+    async function updateCharts(seasonType) {
+      try {
+        // Fetch seasonal analytics data
+        const response = await fetch(
+          `/analytics/api/v1/analytics/seasonal/${store_id}?season_type=${seasonType}`,
+        );
+        const data = await response.json();
+
+        if (response.ok) {
+          // Check if data exists and has the correct structure
+          if (
+            data &&
+            data.revenue_trend &&
+            data.revenue_trend.labels &&
+            data.revenue_trend.values
+          ) {
+            // Update Revenue Trend Chart
+            updateRevenueTrendChart(data.revenue_trend);
+
+            // Fetch and update other charts
+            updatePeakPeriodsChart();
+            updateYearOverYearChart();
+            updateSpecialPeriodsChart();
+          } else {
+            throw new Error("Invalid data structure received from server");
+          }
+        } else {
+          throw new Error(data.error || "Failed to fetch analytics data");
+        }
+      } catch (error) {
+        console.error("Error updating charts:", error);
+        // Show error message to user
+        document.getElementById("charts-container").innerHTML = `
                     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                         <div class="text-center py-12">
                             <h3 class="text-lg font-semibold text-red-600 dark:text-red-400">Error Loading Analytics</h3>
@@ -118,133 +125,147 @@
                         </div>
                     </div>
                 `;
-            }
-        }
-
-        // Chart update functions
-        function updateRevenueTrendChart(data) {
-            // Destroy existing chart if it exists
-            const existingChart = Chart.getChart('revenueTrendChart');
-            if (existingChart) {
-                existingChart.destroy();
-            }
-
-            const ctx = document.getElementById('revenueTrendChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.labels,
-                    datasets: [{
-                        label: 'Revenue',
-                        data: data.values,
-                        borderColor: '#2563EB',
-                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
-
-        async function updatePeakPeriodsChart() {
-            try {
-                const response = await fetch(`/analytics/api/v1/analytics/peaks/${store_id}`);
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.error || 'Failed to fetch peak periods data');
-                }
-
-                // Destroy existing chart if it exists
-                const existingChart = Chart.getChart('peakPeriodsChart');
-                if (existingChart) {
-                    existingChart.destroy();
-                }
-
-                const ctx = document.getElementById('peakPeriodsChart').getContext('2d');
-                new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: data.labels,
-                        datasets: [{
-                            label: 'Peak Sales',
-                            data: data.values,
-                            backgroundColor: '#F59E0B'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false
-                    }
-                });
-            } catch (error) {
-                console.error('Error updating peak periods chart:', error);
-            }
-        }
-
-        async function updateYearOverYearChart() {
-            // For now, just clear the chart
-            const ctx = document.getElementById('yearOverYearChart').getContext('2d');
-            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        }
-
-        async function updateSpecialPeriodsChart() {
-            try {
-                const response = await fetch(`/analytics/api/v1/analytics/special-periods/${store_id}`);
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.error || 'Failed to fetch special periods data');
-                }
-
-                // Destroy existing chart if it exists
-                const existingChart = Chart.getChart('specialPeriodsChart');
-                if (existingChart) {
-                    existingChart.destroy();
-                }
-
-                const ctx = document.getElementById('specialPeriodsChart').getContext('2d');
-                new Chart(ctx, {
-                    type: 'radar',
-                    data: {
-                        labels: data.labels,
-                        datasets: [{
-                            label: 'Performance',
-                            data: data.values,
-                            borderColor: '#10B981',
-                            backgroundColor: 'rgba(16, 185, 129, 0.2)'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false
-                    }
-                });
-            } catch (error) {
-                console.error('Error updating special periods chart:', error);
-            }
-        }
-
-        // Event listener for analysis type changes
-        analysisType.addEventListener('change', (e) => {
-            updateCharts(e.target.value);
-        });
-
-        // Initial chart update
-        updateCharts(analysisType.value);
+      }
     }
+
+    // Chart update functions
+    function updateRevenueTrendChart(data) {
+      // Destroy existing chart if it exists
+      const existingChart = Chart.getChart("revenueTrendChart");
+      if (existingChart) {
+        existingChart.destroy();
+      }
+
+      const ctx = document.getElementById("revenueTrendChart").getContext("2d");
+      new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: data.labels,
+          datasets: [
+            {
+              label: "Revenue",
+              data: data.values,
+              borderColor: "#2563EB",
+              backgroundColor: "rgba(37, 99, 235, 0.1)",
+              fill: true,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "top",
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+        },
+      });
+    }
+
+    async function updatePeakPeriodsChart() {
+      try {
+        const response = await fetch(
+          `/analytics/api/v1/analytics/peaks/${store_id}`,
+        );
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to fetch peak periods data");
+        }
+
+        // Destroy existing chart if it exists
+        const existingChart = Chart.getChart("peakPeriodsChart");
+        if (existingChart) {
+          existingChart.destroy();
+        }
+
+        const ctx = document
+          .getElementById("peakPeriodsChart")
+          .getContext("2d");
+        new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: data.labels,
+            datasets: [
+              {
+                label: "Peak Sales",
+                data: data.values,
+                backgroundColor: "#F59E0B",
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+          },
+        });
+      } catch (error) {
+        console.error("Error updating peak periods chart:", error);
+      }
+    }
+
+    async function updateYearOverYearChart() {
+      // For now, just clear the chart
+      const ctx = document.getElementById("yearOverYearChart").getContext("2d");
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    }
+
+    async function updateSpecialPeriodsChart() {
+      try {
+        const response = await fetch(
+          `/analytics/api/v1/analytics/special-periods/${store_id}`,
+        );
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to fetch special periods data");
+        }
+
+        // Destroy existing chart if it exists
+        const existingChart = Chart.getChart("specialPeriodsChart");
+        if (existingChart) {
+          existingChart.destroy();
+        }
+
+        const ctx = document
+          .getElementById("specialPeriodsChart")
+          .getContext("2d");
+        new Chart(ctx, {
+          type: "radar",
+          data: {
+            labels: data.labels,
+            datasets: [
+              {
+                label: "Performance",
+                data: data.values,
+                borderColor: "#10B981",
+                backgroundColor: "rgba(16, 185, 129, 0.2)",
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+          },
+        });
+      } catch (error) {
+        console.error("Error updating special periods chart:", error);
+      }
+    }
+
+    // Event listener for analysis type changes
+    analysisType.addEventListener("change", (e) => {
+      updateCharts(e.target.value);
+    });
+
+    // Initial chart update
+    updateCharts(analysisType.value);
+  }
 </script>
 {% endblock %}

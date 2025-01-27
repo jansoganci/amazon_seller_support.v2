@@ -1,0 +1,11 @@
+store_id,return_date,order_id,sku,asin,title,quantity,return_reason,status,refund_amount,return_center,return_carrier,tracking_number
+1,2024-01-15,113-7654321-1234567,ELE-1001,B01001ABC1001X,Wireless Earbuds Pro,1,Defective,Completed,199.99,FBA,Amazon Logistics,TBA123456789001
+1,2024-01-16,113-7654321-1234568,OFF-1001,B01011ABC1011X,Ergonomic Mouse Pad XL,2,Size Issue,Completed,39.98,FBA,Amazon Logistics,TBA123456789002
+1,2024-01-17,113-7654321-1234569,GAM-1003,B01023ABC1023X,Gaming Chair,1,Quality Issue,Approved,299.99,FBA,Amazon Logistics,TBA123456789003
+1,2024-01-18,113-7654321-1234570,SMH-1001,B01031ABC1031X,Smart Bulb RGB,3,Not as Described,Completed,89.97,FBA,Amazon Logistics,TBA123456789004
+1,2024-01-16,113-7654321-1234571,ELE-1002,B01002ABC1002X,Smart Watch Elite,1,Defective,Completed,149.99,FBA,Amazon Logistics,TBA123456789005
+1,2024-01-17,113-7654321-1234572,OFF-1002,B01012ABC1012X,Mechanical Keyboard,1,Missing Parts,Pending,129.99,FBA,Amazon Logistics,TBA123456789006
+1,2024-01-18,113-7654321-1234573,GAM-1002,B01022ABC1022X,Gaming Headset 7.1,1,Quality Issue,Completed,129.99,FBA,Amazon Logistics,TBA123456789007
+1,2024-01-19,113-7654321-1234574,SMH-1002,B01032ABC1032X,Smart Security Camera,2,Late Delivery,Approved,179.98,FBA,Amazon Logistics,TBA123456789008
+1,2024-01-17,113-7654321-1234575,ELE-1003,B01003ABC1003X,4K Webcam HD,1,Not as Described,Completed,129.99,FBA,Amazon Logistics,TBA123456789009
+1,2024-01-18,113-7654321-1234576,OFF-1003,B01013ABC1013X,Monitor Stand,1,Wrong Item,Completed,89.99,FBA,Amazon Logistics,TBA123456789010

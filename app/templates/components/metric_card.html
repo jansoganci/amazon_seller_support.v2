@@ -1,0 +1,36 @@
+{% macro metric_card(icon, title, value_id, default_value, description='', extra_info='', threshold_classes='') %}
+<div class="metric-card p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700 {{ threshold_classes }}" data-metric-id="{{ value_id }}">
+    <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center">
+            <div class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary-100 dark:bg-primary-900 mr-3">
+                <i class="fas fa-{{ icon }} text-primary-600 dark:text-primary-300"></i>
+            </div>
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white">{{ title }}</h3>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button type="button" class="metric-info-button text-gray-400 hover:text-gray-500 dark:hover:text-gray-300" data-tooltip-target="metric-info-{{ value_id }}">
+                <i class="fas fa-info-circle"></i>
+            </button>
+            <div id="metric-info-{{ value_id }}" role="tooltip" class="metric-info-tooltip absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700">
+                {{ description }}
+                <div class="tooltip-arrow" data-popper-arrow></div>
+            </div>
+        </div>
+    </div>
+    <div class="flex items-baseline">
+        <div class="flex-1">
+            <div class="flex items-baseline">
+                <span id="{{ value_id }}" class="text-2xl font-semibold text-gray-900 dark:text-white">{{ default_value }}</span>
+                {% if extra_info %}
+                    <span id="{{ value_id }}Growth" class="ml-2 text-sm">{{ extra_info|safe }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% if show_sparkline|default(true) %}
+    <div class="mt-3">
+        <canvas id="{{ value_id }}Sparkline" class="sparkline" height="30"></canvas>
+    </div>
+    {% endif %}
+</div>
+{% endmacro %}

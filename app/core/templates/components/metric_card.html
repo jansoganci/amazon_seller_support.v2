@@ -1,0 +1,16 @@
+{% macro metric_card(icon, title, value_id, default_value, extra_info=None) %}
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+    <div class="flex items-center">
+        <div class="flex-shrink-0">
+            <i class="fas fa-{{ icon }} text-2xl text-primary-600 dark:text-primary-400"></i>
+        </div>
+        <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ title }}</p>
+            <p class="text-lg font-semibold text-gray-900 dark:text-white" id="{{ value_id }}">{{ default_value }}</p>
+            {% if extra_info %}
+            <p class="text-sm text-gray-600 dark:text-gray-400">{{ extra_info | safe }}</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endmacro %} 

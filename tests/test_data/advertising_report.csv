@@ -1,4 +1,0 @@
-store_id,campaign_name,impressions,clicks,cost,sales,ACOS,ROI
-1,Campaign 1,10000,500,250.50,1000.00,0.2505,3.99
-1,Campaign 2,8000,400,200.25,850.50,0.2355,4.25
-1,Campaign 3,12000,600,300.75,1200.25,0.2505,3.99

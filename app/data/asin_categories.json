@@ -1,122 +1,377 @@
 {
-    "B07ZPML7NP": {
-        "main_category": "ELECTRONICS",
-        "sub_category": "PC"
-    },
-    "B08N5KWB9H": {
-        "main_category": "ELECTRONICS",
-        "sub_category": "TV"
-    },
-    "B07PDHSPXT": {
-        "main_category": "ELECTRONICS",
-        "sub_category": "CAMERA"
-    },
-    "B0815XFSGK": {
-        "main_category": "ELECTRONICS",
-        "sub_category": "SMALL_APPLIANCES"
-    },
-    "B07MFZXR1B": {
-        "main_category": "ELECTRONICS",
-        "sub_category": "MUSICAL_INSTRUMENTS"
-    },
-    "B08L5FM4H8": {
-        "main_category": "FASHION",
-        "sub_category": "WATCHES"
-    },
-    "B07CZ6LWW4": {
-        "main_category": "FASHION",
-        "sub_category": "SUNGLASSES"
-    },
-    "B09DFGP8Q2": {
-        "main_category": "FASHION",
-        "sub_category": "SHOES"
-    },
-    "B07QPZQ4KX": {
-        "main_category": "FASHION",
-        "sub_category": "JEWELLRY"
-    },
-    "B08KGVB6X4": {
-        "main_category": "FASHION",
-        "sub_category": "BAGS_LUGGAGE"
-    },
-    "B07TXVNG2F": {
-        "main_category": "DAILY_ESSENTIALS",
-        "sub_category": "HPC"
-    },
-    "B08HLXS4L7": {
-        "main_category": "DAILY_ESSENTIALS",
-        "sub_category": "TOYS"
-    },
-    "B07WDD4PTW": {
-        "main_category": "DAILY_ESSENTIALS",
-        "sub_category": "PETS"
-    },
-    "B09B8YWPBR": {
-        "main_category": "DAILY_ESSENTIALS",
-        "sub_category": "GROCERY"
-    },
-    "B07RGPCQG1": {
-        "main_category": "DAILY_ESSENTIALS",
-        "sub_category": "BABY"
-    },
-    "B08N42GRVC": {
-        "main_category": "HOME_KITCHEN_OUTDOORS",
-        "sub_category": "HOME"
-    },
-    "B07SJGHTTH": {
-        "main_category": "HOME_KITCHEN_OUTDOORS",
-        "sub_category": "KITCHEN"
-    },
-    "B08ZHCZ17G": {
-        "main_category": "HOME_KITCHEN_OUTDOORS",
-        "sub_category": "SPORTS"
-    },
-    "B07XR5XKBW": {
-        "main_category": "HOME_KITCHEN_OUTDOORS",
-        "sub_category": "AUTOMOTIVE"
-    },
-    "B09KLVMZ8N": {
-        "main_category": "HOME_KITCHEN_OUTDOORS",
-        "sub_category": "FURNITURE"
-    },
-    "B07JW9H4J1": {
-        "main_category": "BOOKS_ENTERTAINMENT",
-        "sub_category": "BOOKS"
-    },
-    "B08F7BHDLY": {
-        "main_category": "BOOKS_ENTERTAINMENT",
-        "sub_category": "VIDEO_GAMES"
-    },
-    "B07DHNX1K4": {
-        "main_category": "BOOKS_ENTERTAINMENT",
-        "sub_category": "MOVIES"
-    },
-    "B09JNMW3TG": {
-        "main_category": "AMAZON_INITIATIVES",
-        "sub_category": "LAUNCHPAD"
-    },
-    "B08QRXM3PG": {
-        "main_category": "AMAZON_INITIATIVES",
-        "sub_category": "SNS"
-    },
-    "B07YY1BY5B": {
-        "main_category": "DAILY_ESSENTIALS",
-        "sub_category": "BEAUTY"
-    },
-    "B08L7JXN1B": {
-        "main_category": "HOME_KITCHEN_OUTDOORS",
-        "sub_category": "HOME_IMPROVEMENT"
-    },
-    "B09D8S4K1H": {
-        "main_category": "HOME_KITCHEN_OUTDOORS",
-        "sub_category": "LAWN_GARDEN"
-    },
-    "B07YFXR8QM": {
-        "main_category": "ELECTRONICS",
-        "sub_category": "PCA"
-    },
-    "B08KDHD4QQ": {
-        "main_category": "ELECTRONICS",
-        "sub_category": "TV_APPLIANCES"
-    }
-} 
+  "B07ZPML7NP": {
+    "main_category": "ELECTRONICS",
+    "sub_category": "PC"
+  },
+  "B08N5KWB9H": {
+    "main_category": "ELECTRONICS",
+    "sub_category": "TV"
+  },
+  "B07PDHSPXT": {
+    "main_category": "ELECTRONICS",
+    "sub_category": "CAMERA"
+  },
+  "B0815XFSGK": {
+    "main_category": "ELECTRONICS",
+    "sub_category": "SMALL_APPLIANCES"
+  },
+  "B07MFZXR1B": {
+    "main_category": "ELECTRONICS",
+    "sub_category": "MUSICAL_INSTRUMENTS"
+  },
+  "B08L5FM4H8": {
+    "main_category": "FASHION",
+    "sub_category": "WATCHES"
+  },
+  "B07CZ6LWW4": {
+    "main_category": "FASHION",
+    "sub_category": "SUNGLASSES"
+  },
+  "B09DFGP8Q2": {
+    "main_category": "FASHION",
+    "sub_category": "SHOES"
+  },
+  "B07QPZQ4KX": {
+    "main_category": "FASHION",
+    "sub_category": "JEWELLRY"
+  },
+  "B08KGVB6X4": {
+    "main_category": "FASHION",
+    "sub_category": "BAGS_LUGGAGE"
+  },
+  "B07TXVNG2F": {
+    "main_category": "DAILY_ESSENTIALS",
+    "sub_category": "HPC"
+  },
+  "B08HLXS4L7": {
+    "main_category": "DAILY_ESSENTIALS",
+    "sub_category": "TOYS"
+  },
+  "B07WDD4PTW": {
+    "main_category": "DAILY_ESSENTIALS",
+    "sub_category": "PETS"
+  },
+  "B09B8YWPBR": {
+    "main_category": "DAILY_ESSENTIALS",
+    "sub_category": "GROCERY"
+  },
+  "B07RGPCQG1": {
+    "main_category": "DAILY_ESSENTIALS",
+    "sub_category": "BABY"
+  },
+  "B08N42GRVC": {
+    "main_category": "HOME_KITCHEN_OUTDOORS",
+    "sub_category": "HOME"
+  },
+  "B07SJGHTTH": {
+    "main_category": "HOME_KITCHEN_OUTDOORS",
+    "sub_category": "KITCHEN"
+  },
+  "B08ZHCZ17G": {
+    "main_category": "HOME_KITCHEN_OUTDOORS",
+    "sub_category": "SPORTS"
+  },
+  "B07XR5XKBW": {
+    "main_category": "HOME_KITCHEN_OUTDOORS",
+    "sub_category": "AUTOMOTIVE"
+  },
+  "B09KLVMZ8N": {
+    "main_category": "HOME_KITCHEN_OUTDOORS",
+    "sub_category": "FURNITURE"
+  },
+  "B07JW9H4J1": {
+    "main_category": "BOOKS_ENTERTAINMENT",
+    "sub_category": "BOOKS"
+  },
+  "B08F7BHDLY": {
+    "main_category": "BOOKS_ENTERTAINMENT",
+    "sub_category": "VIDEO_GAMES"
+  },
+  "B07DHNX1K4": {
+    "main_category": "BOOKS_ENTERTAINMENT",
+    "sub_category": "MOVIES"
+  },
+  "B09JNMW3TG": {
+    "main_category": "AMAZON_INITIATIVES",
+    "sub_category": "LAUNCHPAD"
+  },
+  "B08QRXM3PG": {
+    "main_category": "AMAZON_INITIATIVES",
+    "sub_category": "SNS"
+  },
+  "B07YY1BY5B": {
+    "main_category": "DAILY_ESSENTIALS",
+    "sub_category": "BEAUTY"
+  },
+  "B08L7JXN1B": {
+    "main_category": "HOME_KITCHEN_OUTDOORS",
+    "sub_category": "HOME_IMPROVEMENT"
+  },
+  "B09D8S4K1H": {
+    "main_category": "HOME_KITCHEN_OUTDOORS",
+    "sub_category": "LAWN_GARDEN"
+  },
+  "B07YFXR8QM": {
+    "main_category": "ELECTRONICS",
+    "sub_category": "PCA"
+  },
+  "B08KDHD4QQ": {
+    "main_category": "ELECTRONICS",
+    "sub_category": "TV_APPLIANCES"
+  },
+  "B00TEST321": {
+    "main_category": "ELECTRONICS",
+    "sub_category": "ACCESSORIES",
+    "title": "Monitor Arm"
+  },
+  "B00TEST365": {
+    "main_category": "ELECTRONICS",
+    "sub_category": "ACCESSORIES",
+    "title": "Wireless Headphones"
+  },
+  "B00TEST414": {
+    "main_category": "HOME_KITCHEN",
+    "sub_category": "COOKWARE",
+    "title": "Glass Mixing Bowls"
+  },
+  "B00TEST581": {
+    "main_category": "HOME_KITCHEN",
+    "sub_category": "COOKWARE",
+    "title": "Measuring Cups and Spoons"
+  },
+  "B00TEST912": {
+    "main_category": "DAILY_ESSENTIALS",
+    "sub_category": "TOYS",
+    "title": "Board Games"
+  },
+  "B00TEST927": {
+    "main_category": "DAILY_ESSENTIALS",
+    "sub_category": "TOYS",
+    "title": "Educational Toys"
+  },
+  "B00TEST127": {
+    "main_category": "ELECTRONICS",
+    "sub_category": "PCA",
+    "title": "Smartwatches"
+  },
+  "B00TEST124": {
+    "main_category": "HOME_KITCHEN_OUTDOORS",
+    "sub_category": "SPORTS",
+    "title": "Fitness Equipment"
+  },
+  "B00TEST492": {
+    "main_category": "BOOKS_ENTERTAINMENT",
+    "sub_category": "BOOKS",
+    "title": "Non-fiction Book"
+  },
+  "B00TEST116": {
+    "main_category": "HOME_KITCHEN_OUTDOORS",
+    "sub_category": "SPORTS",
+    "title": "Fitness Equipment"
+  },
+  "B00TEST290": {
+    "main_category": "DAILY_ESSENTIALS",
+    "sub_category": "TOYS",
+    "title": "Board Games"
+  },
+  "B00TEST680": {
+    "main_category": "BOOKS_ENTERTAINMENT",
+    "sub_category": "BOOKS",
+    "title": "Children's Books"
+  },
+  "B00TEST225": {
+    "main_category": "ELECTRONICS",
+    "sub_category": "PCA",
+    "title": "Headphones"
+  },
+  "B00TEST835": {
+    "main_category": "DAILY_ESSENTIALS",
+    "sub_category": "TOYS",
+    "title": "Action Figures"
+  },
+  "B00TEST936": {
+    "main_category": "HOME_KITCHEN_OUTDOORS",
+    "sub_category": "SPORTS",
+    "title": "Fitness Equipment"
+  },
+  "B00TEST129": {
+    "main_category": "ELECTRONICS",
+    "sub_category": "PCA",
+    "title": "Headphones"
+  },
+  "B00TEST951": {
+    "main_category": "ELECTRONICS",
+    "sub_category": "PCA",
+    "title": "Headphones"
+  },
+  "B00TEST106": {
+    "main_category": "HOME_KITCHEN_OUTDOORS",
+    "sub_category": "SPORTS",
+    "title": "Fitness Equipment"
+  },
+  "B00TEST815": {
+    "main_category": "HOME_KITCHEN_OUTDOORS",
+    "sub_category": "KITCHEN",
+    "title": "Kitchen Tools"
+  },
+  "B00TEST241": {
+    "main_category": "ELECTRONICS",
+    "sub_category": "PCA",
+    "title": "Speakers"
+  },
+  "B00TEST946": {
+    "main_category": "BOOKS_ENTERTAINMENT",
+    "sub_category": "BOOKS",
+    "title": "Children's Books"
+  },
+  "B00TEST956": {
+    "main_category": "DAILY_ESSENTIALS",
+    "sub_category": "TOYS",
+    "title": "Action Figures"
+  },
+  "B00TEST663": {
+    "main_category": "DAILY_ESSENTIALS",
+    "sub_category": "TOYS",
+    "title": "Board Games"
+  },
+  "B00TEST268": {
+    "main_category": "ELECTRONICS",
+    "sub_category": "PCA",
+    "title": "Smartwatches"
+  },
+  "B00TEST163": {
+    "main_category": "BOOKS_ENTERTAINMENT",
+    "sub_category": "BOOKS",
+    "title": "Non-fiction Book"
+  },
+  "B00TEST105": {
+    "main_category": "HOME_KITCHEN_OUTDOORS",
+    "sub_category": "HOME",
+    "title": "Bedding"
+  },
+  "B00TEST642": {
+    "main_category": "BOOKS_ENTERTAINMENT",
+    "sub_category": "BOOKS",
+    "title": "Children's Books"
+  },
+  "B00TEST107": {
+    "main_category": "DAILY_ESSENTIALS",
+    "sub_category": "TOYS",
+    "title": "Action Figures"
+  },
+  "B00TEST798": {
+    "main_category": "ELECTRONICS",
+    "sub_category": "PCA",
+    "title": "Headphones"
+  },
+  "B00TEST782": {
+    "main_category": "BOOKS_ENTERTAINMENT",
+    "sub_category": "BOOKS",
+    "title": "Non-fiction Book"
+  },
+  "B00TEST441": {
+    "main_category": "ELECTRONICS",
+    "sub_category": "PCA",
+    "title": "Speakers"
+  },
+  "B00TEST487": {
+    "main_category": "DAILY_ESSENTIALS",
+    "sub_category": "TOYS",
+    "title": "Action Figures"
+  },
+  "B00TEST414": {
+    "main_category": "BOOKS_ENTERTAINMENT",
+    "sub_category": "BOOKS",
+    "title": "Fiction Book"
+  },
+  "B00TEST572": {
+    "main_category": "ELECTRONICS",
+    "sub_category": "PCA",
+    "title": "Speakers"
+  },
+  "B00TEST394": {
+    "main_category": "ELECTRONICS",
+    "sub_category": "PCA",
+    "title": "Smartwatches"
+  },
+  "B00TEST627": {
+    "main_category": "HOME_KITCHEN_OUTDOORS",
+    "sub_category": "KITCHEN",
+    "title": "Dining Sets"
+  },
+  "B00TEST263": {
+    "main_category": "BOOKS_ENTERTAINMENT",
+    "sub_category": "BOOKS",
+    "title": "Children's Books"
+  },
+  "B00TEST722": {
+    "main_category": "HOME_KITCHEN_OUTDOORS",
+    "sub_category": "KITCHEN",
+    "title": "Dining Sets"
+  },
+  "B00TEST553": {
+    "main_category": "ELECTRONICS",
+    "sub_category": "PCA",
+    "title": "Headphones"
+  },
+  "B00TEST253": {
+    "main_category": "DAILY_ESSENTIALS",
+    "sub_category": "TOYS",
+    "title": "Educational Toys"
+  },
+  "B00TEST980": {
+    "main_category": "HOME_KITCHEN_OUTDOORS",
+    "sub_category": "SPORTS",
+    "title": "Camping Gear"
+  },
+  "B00TEST685": {
+    "main_category": "DAILY_ESSENTIALS",
+    "sub_category": "TOYS",
+    "title": "Action Figures"
+  },
+  "B00TEST743": {
+    "main_category": "HOME_KITCHEN_OUTDOORS",
+    "sub_category": "KITCHEN",
+    "title": "Kitchen Tools"
+  },
+  "B00TEST295": {
+    "main_category": "BOOKS_ENTERTAINMENT",
+    "sub_category": "BOOKS",
+    "title": "Children's Books"
+  },
+  "B00TEST276": {
+    "main_category": "HOME_KITCHEN_OUTDOORS",
+    "sub_category": "HOME",
+    "title": "Bedding"
+  },
+  "B00TEST546": {
+    "main_category": "HOME_KITCHEN_OUTDOORS",
+    "sub_category": "SPORTS",
+    "title": "Sportswear"
+  },
+  "B00TEST329": {
+    "main_category": "HOME_KITCHEN_OUTDOORS",
+    "sub_category": "SPORTS",
+    "title": "Sportswear"
+  },
+  "B00TEST541": {
+    "main_category": "HOME_KITCHEN_OUTDOORS",
+    "sub_category": "HOME",
+    "title": "Bedding"
+  },
+  "B00TEST634": {
+    "main_category": "BOOKS_ENTERTAINMENT",
+    "sub_category": "BOOKS",
+    "title": "Children's Books"
+  },
+  "B00TEST975": {
+    "main_category": "DAILY_ESSENTIALS",
+    "sub_category": "TOYS",
+    "title": "Board Games"
+  },
+  "B00TEST350": {
+    "main_category": "DAILY_ESSENTIALS",
+    "sub_category": "TOYS",
+    "title": "Educational Toys"
+  }
+}

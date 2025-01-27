@@ -1,17 +1,31 @@
 """Models package."""
 
-from app.models.user import User
-from app.models.store import Store
-from app.models.csv_file import CSVFile
-from app.models.reports import BusinessReport, AdvertisingReport, ReturnReport, InventoryReport, StoreReport
+# Import db instance first
+from app.extensions import db
 
+# Import all models
+from .user import User
+from .store import Store
+from app.modules.business.models import BusinessReport
+from app.modules.category.models import Category, ASINKategori
+from app.modules.advertising.models import AdvertisingReport
+from app.modules.inventory.models import InventoryReport
+from app.modules.returns.models import ReturnReport
+from app.modules.upload_csv.models import CSVFile
+
+# Register all models
 __all__ = [
+    'db',
     'User',
     'Store',
     'CSVFile',
     'BusinessReport',
     'AdvertisingReport',
-    'ReturnReport',
     'InventoryReport',
-    'StoreReport'
+    'ReturnReport',
+    'Category',
+    'ASINKategori'
 ]
+
+# Ensure all models are loaded
+db.Model.metadata.tables

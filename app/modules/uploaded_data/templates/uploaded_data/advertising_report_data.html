@@ -1,0 +1,95 @@
+{% extends 'base_tailwind.html' %}
+
+{% block title %}Advertising Reports{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header Section -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Advertising Reports</h1>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">View your advertising report data</p>
+    </div>
+
+    <!-- Table Section -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Campaign</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Ad Group</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider hidden lg:table-cell">Targeting</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider hidden xl:table-cell">Match Type</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider hidden 2xl:table-cell">Search Term</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Impressions</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Clicks</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider hidden sm:table-cell">CTR</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider hidden md:table-cell">CPC</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Spend</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Sales</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ACOS</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider hidden lg:table-cell">Orders</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider hidden xl:table-cell">Units</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider hidden 2xl:table-cell">Conv. Rate</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for report in reports %}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            {{ report.date.strftime('%Y-%m-%d') }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            {{ report.campaign_name }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            {{ report.ad_group_name }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white hidden lg:table-cell">
+                            {{ report.targeting_type }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white hidden xl:table-cell">
+                            {{ report.match_type }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white hidden 2xl:table-cell">
+                            {{ report.search_term }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            {{ report.impressions }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            {{ report.clicks }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white hidden sm:table-cell">
+                            {{ "%.2f"|format(report.ctr) }}%
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white hidden md:table-cell">
+                            ${{ "%.2f"|format(report.cpc) }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            ${{ "%.2f"|format(report.spend) }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            ${{ "%.2f"|format(report.total_sales) }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            {{ "%.2f"|format(report.acos) }}%
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white hidden lg:table-cell">
+                            {{ report.total_orders }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white hidden xl:table-cell">
+                            {{ report.total_units }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white hidden 2xl:table-cell">
+                            {{ "%.2f"|format(report.conversion_rate) }}%
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %} 

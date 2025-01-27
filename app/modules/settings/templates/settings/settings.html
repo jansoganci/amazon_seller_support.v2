@@ -1,0 +1,150 @@
+{% extends "base_tailwind.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-8 text-gray-900 dark:text-white">Settings</h1>
+    
+    <!-- Profile Settings -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 border border-gray-200 dark:border-gray-700">
+        <h2 class="text-xl font-semibold mb-6 text-gray-900 dark:text-white">Profile Information</h2>
+        <form method="POST" action="{{ url_for('settings.update') }}" class="space-y-4">
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
+                <input type="text" name="name" id="name" value="{{ current_user.name }}"
+                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+            </div>
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+                <input type="email" name="email" id="email" value="{{ current_user.email }}"
+                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+            </div>
+            <button type="submit" name="update_profile" value="1"
+                class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md">
+                Update Profile
+            </button>
+        </form>
+    </div>
+
+    <!-- Change Password -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 border border-gray-200 dark:border-gray-700">
+        <h2 class="text-xl font-semibold mb-6 text-gray-900 dark:text-white">Change Password</h2>
+        <form method="POST" action="{{ url_for('settings.update') }}" class="space-y-4">
+            <div>
+                <label for="current_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Current Password</label>
+                <input type="password" name="current_password" id="current_password"
+                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+            </div>
+            <div>
+                <label for="new_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">New Password</label>
+                <input type="password" name="new_password" id="new_password"
+                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+            </div>
+            <div>
+                <label for="confirm_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Confirm New Password</label>
+                <input type="password" name="confirm_password" id="confirm_password"
+                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+            </div>
+            <button type="submit" name="update_password" value="1"
+                class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md">
+                Update Password
+            </button>
+        </form>
+    </div>
+
+    <!-- Application Settings -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
+        <h2 class="text-xl font-semibold mb-6 text-gray-900 dark:text-white">Application Settings</h2>
+        <form method="POST" action="{{ url_for('settings.update') }}" class="space-y-6">
+            <!-- Language Selection -->
+            <div>
+                <label for="language" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Language</label>
+                <select name="language" id="language"
+                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                    <option value="tr" {% if current_user.preferences.language == 'tr' %}selected{% endif %}>Turkish</option>
+                    <option value="en" {% if current_user.preferences.language == 'en' %}selected{% endif %}>English</option>
+                </select>
+            </div>
+
+            <!-- Currency -->
+            <div>
+                <label for="currency" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Currency</label>
+                <select name="currency" id="currency"
+                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                    <option value="TRY" {% if current_user.preferences.currency == 'TRY' %}selected{% endif %}>Turkish Lira (₺)</option>
+                    <option value="USD" {% if current_user.preferences.currency == 'USD' %}selected{% endif %}>US Dollar ($)</option>
+                    <option value="EUR" {% if current_user.preferences.currency == 'EUR' %}selected{% endif %}>Euro (€)</option>
+                </select>
+            </div>
+
+            <!-- Theme Selection -->
+            <div>
+                <label for="theme" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Theme</label>
+                <select name="theme" id="theme"
+                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                    <option value="light" {% if current_user.preferences.theme == 'light' %}selected{% endif %}>Light Theme</option>
+                    <option value="dark" {% if current_user.preferences.theme == 'dark' %}selected{% endif %}>Dark Theme</option>
+                </select>
+            </div>
+
+            <!-- Notification Settings -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white">Notification Settings</h3>
+                <div class="space-y-2">
+                    <div class="flex items-center">
+                        <input type="checkbox" name="email_notifications" id="email_notifications"
+                            {% if current_user.preferences.notifications.email %}checked{% endif %}
+                            class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
+                        <label for="email_notifications" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                            Email Notifications
+                        </label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" name="browser_notifications" id="browser_notifications"
+                            {% if current_user.preferences.notifications.browser %}checked{% endif %}
+                            class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
+                        <label for="browser_notifications" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                            Browser Notifications
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" name="update_preferences" value="1"
+                class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md">
+                Save Preferences
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Dark Mode Toggle Script -->
+<script>
+    // Set theme on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const storedTheme = localStorage.theme || 'light';
+        const themeSelect = document.getElementById('theme');
+        
+        // Set select box value based on localStorage
+        themeSelect.value = storedTheme;
+        
+        // Apply theme
+        if (storedTheme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    });
+
+    // Theme change handler
+    document.getElementById('theme').addEventListener('change', function() {
+        const theme = this.value;
+        if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+            localStorage.theme = 'dark';
+        } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.theme = 'light';
+        }
+    });
+</script>
+{% endblock %}

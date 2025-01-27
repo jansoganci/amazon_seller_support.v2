@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, request, flash, session
+from flask import Blueprint, render_template, redirect, url_for, request, flash, session, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from app.models.user import User
@@ -27,7 +27,7 @@ def register():
         db.session.add(user)
         db.session.commit()
         
-        # Otomatik giriş yap ve dashboard'a yönlendir
+        # Otomatik giriș yap ve dashboard'a yönlendir
         login_user(user)
         flash('Registration successful!', 'success')
         return redirect(url_for('main.dashboard'))
@@ -37,26 +37,51 @@ def register():
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
-        remember = request.form.get('remember', False)
+        # Handle both form data and JSON
+        if request.is_json:
+            data = request.get_json()
+            is_json = True
+        else:
+            data = request.form
+            is_json = False
+            
+        if not data:
+            if is_json:
+                return {'error': 'No data provided'}, 400
+            flash('Please fill all fields', 'error')
+            return redirect(url_for('auth.login'))
+            
+        email = data.get('email')
+        password = data.get('password')
+        remember = data.get('remember', False)
+        
+        if not email or not password:
+            if is_json:
+                return {'error': 'Email and password are required'}, 400
+            flash('Please fill all fields', 'error')
+            return redirect(url_for('auth.login'))
         
         user = User.query.filter_by(email=email).first()
         
         if user and user.check_password(password):
-            # Session'ı kalıcı yap
+            # Make session permanent
             session.permanent = True
-            # Kullanıcıyı hatırla seçeneği ile giriş yap
+            # Login with remember option
             login_user(user, remember=remember)
-            # Login sonrası session'a user_id ekle
+            # Add user_id to session
             session['user_id'] = user.id
-            session['_fresh'] = True
             
-            next_page = request.args.get('next')
-            return redirect(next_page if next_page else url_for('main.dashboard'))
-        else:
-            flash('Invalid email or password', 'error')
+            if is_json:
+                return {'message': 'Login successful', 'redirect': url_for('dashboard.index')}, 200
+                
+            return redirect(url_for('dashboard.index'))
             
+        if is_json:
+            return {'error': 'Invalid email or password'}, 401
+            
+        flash('Invalid email or password', 'error')
+        return redirect(url_for('auth.login'))
+        
     return render_template('auth/login.html')
 
 @bp.route('/logout')

@@ -1,0 +1,50 @@
+// Project Structure Rules
+- Backend code must reside in `/app/`.
+- Templates (HTML) must be in `/app/templates/`.
+- Static files (CSS, JS, images) must be in `/app/static/`.
+- Each module must have the following structure:
+  /app/modules/{module_name}/
+    - models.py
+    - routes.py
+    - services.py
+    - templates/
+    - static/
+
+// Naming Conventions
+- Python files: snake_case (e.g., `services.py`).
+- HTML files: kebab-case (e.g., `dashboard-view.html`).
+- CSS files: kebab-case (e.g., `button-styles.css`).
+- JavaScript files: camelCase (e.g., `formHelper.js`).
+- Test files: test_*.py (e.g., `test_routes.py`).
+
+// TailwindCSS Configuration
+- All TailwindCSS classes must follow class sorting rules.
+- Tree-shaking must be enabled in `tailwind.config.js` with the following:
+  content: [
+    "./app/templates/**/*.html",
+    "./app/static/src/**/*.js"
+  ]
+- Add `prettier-plugin-tailwindcss` for automatic class sorting.
+
+// Linting and Formatting Rules
+- JavaScript must pass ESLint checks.
+- Python must pass Flake8 and Black formatting checks.
+- Add the following ESLint configuration for TailwindCSS:
+  plugins: ["tailwindcss"],
+  rules: {
+    "tailwindcss/classnames-order": "warn",
+  }
+
+// Testing Rules
+- All Python tests must achieve at least 80% coverage.
+- Tests for modules must be placed in `/tests/modules/{module_name}/`.
+- Shared fixtures must be in `/tests/conftest.py`.
+
+// Documentation Rules
+- API updates must be documented in `/docs/api.md`.
+- Technical updates must be documented in `/docs/technical.md`.
+
+// Deployment Rules
+- Before deployment, all linting and testing checks must pass.
+- Use Gunicorn for production with a minimum of 4 workers.
+- TailwindCSS static files must be built and served via a CDN or file server.

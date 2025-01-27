@@ -1,0 +1,98 @@
+{% macro date_range_picker(id, label='Date Range') %}
+<div x-data="dateRangePicker('{{ id }}')" class="relative">
+    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ label }}</label>
+    
+    <!-- Date Input Trigger -->
+    <button 
+        @click="isOpen = !isOpen"
+        type="button"
+        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+        <span x-text="formatDateRange"></span>
+        <span class="absolute right-2 top-[30px]">
+            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+        </span>
+    </button>
+
+    <!-- Calendar Dropdown -->
+    <div 
+        x-show="isOpen"
+        @click.away="isOpen = false"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 scale-95"
+        x-transition:enter-end="opacity-100 scale-100"
+        x-transition:leave="transition ease-in duration-75"
+        x-transition:leave-start="opacity-100 scale-100"
+        x-transition:leave-end="opacity-0 scale-95"
+        class="absolute z-50 mt-1 w-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+        
+        <div class="flex space-x-4">
+            <!-- Start Date Calendar -->
+            <div>
+                <div class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Start Date</div>
+                <div class="grid grid-cols-7 gap-1">
+                    <template x-for="day in startCalendarDays" :key="day.date">
+                        <button
+                            @click="selectDate('start', day)"
+                            :class="{
+                                'bg-primary-100 dark:bg-primary-800': isSelectedStart(day),
+                                'hover:bg-gray-100 dark:hover:bg-gray-700': !day.disabled && !isSelectedStart(day),
+                                'text-gray-400 dark:text-gray-600': day.disabled,
+                                'font-bold': day.isToday
+                            }"
+                            :disabled="day.disabled"
+                            class="p-2 text-center text-sm rounded-lg transition-colors"
+                            x-text="day.dayOfMonth">
+                        </button>
+                    </template>
+                </div>
+            </div>
+
+            <!-- End Date Calendar -->
+            <div>
+                <div class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">End Date</div>
+                <div class="grid grid-cols-7 gap-1">
+                    <template x-for="day in endCalendarDays" :key="day.date">
+                        <button
+                            @click="selectDate('end', day)"
+                            :class="{
+                                'bg-primary-100 dark:bg-primary-800': isSelectedEnd(day),
+                                'hover:bg-gray-100 dark:hover:bg-gray-700': !day.disabled && !isSelectedEnd(day),
+                                'text-gray-400 dark:text-gray-600': day.disabled,
+                                'font-bold': day.isToday
+                            }"
+                            :disabled="day.disabled"
+                            class="p-2 text-center text-sm rounded-lg transition-colors"
+                            x-text="day.dayOfMonth">
+                        </button>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Selection Buttons -->
+        <div class="mt-4 flex space-x-2">
+            <button
+                @click="selectPreset('last7')"
+                class="px-3 py-1 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors">
+                Last 7 Days
+            </button>
+            <button
+                @click="selectPreset('last30')"
+                class="px-3 py-1 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors">
+                Last 30 Days
+            </button>
+            <button
+                @click="selectPreset('thisMonth')"
+                class="px-3 py-1 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors">
+                This Month
+            </button>
+        </div>
+    </div>
+
+    <!-- Hidden Input for Form Submission -->
+    <input type="hidden" :name="id + '_start'" x-model="startDate">
+    <input type="hidden" :name="id + '_end'" x-model="endDate">
+</div>
+{% endmacro %}

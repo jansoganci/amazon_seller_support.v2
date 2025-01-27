@@ -103,12 +103,37 @@ def get_category_by_asin(asin: str) -> tuple[str, str]:
     if asin_data:
         main_cat = asin_data['main_category']
         sub_cat = asin_data['sub_category']
-        
-        # Kategori kodlarını bul
-        main_code = AMAZON_CATEGORIES[main_cat]['code']
-        sub_code = AMAZON_CATEGORIES[main_cat]['subcategories'][sub_cat]
-        
-        return (main_code, sub_code)
+        return (main_cat, sub_cat)
     
-    # ASIN bulunamazsa varsayılan kategori
-    return ('ELE', 'AEL') 
+    # ASIN bulunamazsa None döndür
+    return None 
+
+# Error messages
+ERROR_MESSAGES = {
+    'INVALID_DATE': 'Invalid date format. Expected format: YYYY-MM-DD',
+    'INVALID_NUMBER': '{} must be a valid number',
+    'INVALID_DECIMAL': '{} must be a valid decimal number',
+    'INVALID_STORE': 'Invalid store ID',
+    'UNAUTHORIZED': 'User is not authorized to access this store',
+    'FILE_EMPTY': 'The uploaded file is empty',
+    'MISSING_COLUMNS': 'Missing required columns in the file',
+    'DUPLICATE_ROWS': 'Duplicate entries found in the file',
+    'UNKNOWN_ERROR': 'An unknown error occurred'
+}
+
+# ASIN Categories
+ASIN_CATEGORIES = {
+    'Electronics': ['B00', 'B01'],
+    'Home & Kitchen': ['B02', 'B03'],
+    'Sports & Outdoors': ['B04', 'B05'],
+    'Beauty & Personal Care': ['B06', 'B07'],
+    'Toys & Games': ['B08', 'B09']
+}
+
+def get_category_by_asin(asin: str) -> tuple:
+    """Get category and subcategory for an ASIN."""
+    prefix = asin[:3] if asin else ''
+    for category, prefixes in ASIN_CATEGORIES.items():
+        if prefix in prefixes:
+            return category, None
+    return 'Other', None 

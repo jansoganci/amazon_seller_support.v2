@@ -1,34 +1,46 @@
-{% extends 'base_tailwind.html' %}
+{% extends "base_tailwind.html" %}
 
-{% block title %}Ana Sayfa{% endblock %}
+{% block title %}Amazon Seller Support{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center py-16 sm:py-20">
-        <div class="max-w-3xl mx-auto">
-            <h1 class="text-4xl font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
-                Amazon Seller Support
-            </h1>
-            <p class="mt-6 text-xl text-gray-500">
-                Amazon satıcı verilerinizi kolayca analiz edin. CSV dosyalarınızı yükleyin ve işletmenizin performansı hakkında anında bilgi edinin.
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-4">Welcome to Amazon Seller Support</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Business Reports Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4">Business Reports</h2>
+            <p class="text-gray-600 dark:text-gray-400 mb-4">
+                Analyze your business performance with detailed reports and insights.
             </p>
-            <div class="mt-10 flex justify-center gap-4">
-                {% if current_user.is_authenticated %}
-                    <a href="{{ url_for('main.dashboard') }}" 
-                       class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                        Panele Git
-                    </a>
-                {% else %}
-                    <a href="{{ url_for('auth.login') }}" 
-                       class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                        Başlayın
-                    </a>
-                {% endif %}
-                <a href="#" 
-                   class="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                    Daha Fazla Bilgi
-                </a>
-            </div>
+            <a href="{{ url_for('business.report') }}" 
+               class="inline-block bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700">
+                View Reports
+            </a>
+        </div>
+
+        <!-- Advertising Reports Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4">Advertising Reports</h2>
+            <p class="text-gray-600 dark:text-gray-400 mb-4">
+                Track your advertising campaigns and optimize your ROI.
+            </p>
+            <a href="{{ url_for('advertising.report') }}"
+               class="inline-block bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700">
+                View Campaigns
+            </a>
+        </div>
+
+        <!-- Upload Data Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4">Upload Reports</h2>
+            <p class="text-gray-600 dark:text-gray-400 mb-4">
+                Upload your CSV reports for analysis and insights.
+            </p>
+            <a href="{{ url_for('core.upload') }}"
+               class="inline-block bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700">
+                Upload Data
+            </a>
         </div>
     </div>
 </div>

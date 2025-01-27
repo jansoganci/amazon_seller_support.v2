@@ -1,0 +1,465 @@
+{% extends "base_tailwind.html" %}
+
+{% block title %}Advertisement Report{% endblock %}
+
+{% block content %}
+<!-- Toast Container -->
+<div id="toastContainer" class="fixed top-4 right-4 z-50"></div>
+
+<div class="p-4 bg-white dark:bg-gray-900">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Advertisement Report</h1>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Monitor your advertising performance and metrics</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+    <!-- Sabit Gün Filtreleri -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Period</label>
+            <select id="period" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <option value="7">Last 7 Days</option>
+                <option value="30">Last 30 Days</option>
+                <option value="90">Last 90 Days</option>
+            </select>
+        </div>
+        <!-- Date Range Picker Input -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date Range</label>
+            <input type="text" id="daterange" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Campaign</label>
+            <select id="campaign" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <option value="">All Campaigns</option>
+                {% for campaign in campaigns %}
+                <option value="{{ campaign }}">{{ campaign }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ad Group</label>
+            <select id="adGroup" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <option value="">All Ad Groups</option>
+                {% for ad_group in ad_groups %}
+                <option value="{{ ad_group }}">{{ ad_group }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Targeting Type</label>
+            <select id="targetingType" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <option value="">All Types</option>
+                <option value="Keyword">Keyword</option>
+                <option value="Product">Product</option>
+                <option value="Category">Category</option>
+            </select>
+        </div>
+        <div class="flex items-end">
+            <button id="applyFilters" class="w-full px-4 py-2.5 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 dark:focus:ring-primary-800">
+                Apply Filters
+            </button>
+        </div>
+    </div>
+
+    <!-- Metric Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <!-- Total Spend Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-dollar-sign text-2xl text-primary-600 dark:text-primary-400"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Spend</p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white" id="totalSpend">$0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Sales Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-chart-line text-2xl text-primary-600 dark:text-primary-400"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Sales</p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white" id="totalSales">$0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Clicks Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-mouse-pointer text-2xl text-primary-600 dark:text-primary-400"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Clicks</p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white" id="totalClicks">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACOS Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-percentage text-2xl text-primary-600 dark:text-primary-400"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">ACOS</p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white" id="acos">0%</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Grid -->
+    <div class="grid grid-cols-1 gap-6 mb-6">
+        <!-- Spend vs Sales Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Spend vs Sales</h3>
+            <div class="h-96">
+                <canvas id="spendSalesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- CTR Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">CTR (Click-Through Rate)</h3>
+            <div class="h-96">
+                <canvas id="ctrChart"></canvas>
+            </div>
+        </div>
+
+        <!-- CPC Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">CPC (Cost Per Click)</h3>
+            <div class="h-96">
+                <canvas id="cpcChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Conversion Rate Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Conversion Rate</h3>
+            <div class="h-96">
+                <canvas id="conversionRateChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+
+<style>
+/* Toast Styles */
+.toast {
+    position: relative;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    animation: slideIn 0.3s ease-out;
+    max-width: 24rem;
+}
+
+.toast.success {
+    background-color: #10B981;
+    color: white;
+}
+
+.toast.error {
+    background-color: #EF4444;
+    color: white;
+}
+
+.toast.warning {
+    background-color: #F59E0B;
+    color: white;
+}
+
+.toast.info {
+    background-color: #3B82F6;
+    color: white;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+</style>
+
+<script>
+const store_id = parseInt("{{ current_user.active_store_id }}");
+const isDarkMode = document.documentElement.classList.contains('dark');
+let spendSalesChart, ctrChart, cpcChart, conversionRateChart;
+
+// Toast function
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    
+    document.getElementById('toastContainer').appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s ease-out';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Initialize date range picker
+$(document).ready(function() {
+    $('#daterange').daterangepicker({
+        startDate: moment().subtract(30, 'days'),
+        endDate: moment(),
+        ranges: {
+           'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+           'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+           'This Month': [moment().startOf('month'), moment().endOf('month')],
+           'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+        }
+    });
+
+    // Initialize charts
+    initializeCharts();
+    
+    // Initial data fetch after daterangepicker is initialized
+    fetchData();
+
+    // Apply filters button click
+    $('#applyFilters').click(function() {
+        const period = $('#period').val();
+        const endDate = moment().format('YYYY-MM-DD');
+        const startDate = moment().subtract(period, 'days').format('YYYY-MM-DD');
+
+        const params = {
+            store_id: store_id,
+            start_date: startDate,
+            end_date: endDate,
+            campaign: $('#campaign').val() || null,
+            ad_group: $('#adGroup').val() || null,
+            targeting_type: $('#targetingType').val() || null
+        };
+
+        $.get('/api/analytics/advertising', params)
+            .done(function(response) {
+                updateCharts(response);
+            })
+            .fail(function(error) {
+                showToast('Error fetching data', 'error');
+            });
+    });
+});
+
+// Chart configuration
+const chartConfig = {
+    type: 'line',
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top',
+                labels: {
+                    color: isDarkMode ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.9)'
+                }
+            }
+        },
+        scales: {
+            x: {
+                grid: {
+                    display: false
+                },
+                ticks: {
+                    color: isDarkMode ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.9)'
+                }
+            },
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                },
+                ticks: {
+                    color: isDarkMode ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.9)',
+                    callback: function(value) {
+                        if (this.chart.canvas.id === 'ctrChart' || this.chart.canvas.id === 'conversionRateChart') {
+                            return value.toFixed(2) + '%';
+                        } else if (this.chart.canvas.id === 'spendSalesChart' || this.chart.canvas.id === 'cpcChart') {
+                            return '$' + value.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                        } else {
+                            return value.toLocaleString('en-US');
+                        }
+                    }
+                }
+            }
+        }
+    }
+};
+
+// Initialize charts
+function initializeCharts() {
+    // Spend vs Sales Chart
+    const spendSalesCtx = document.getElementById('spendSalesChart').getContext('2d');
+    spendSalesChart = new Chart(spendSalesCtx, {
+        ...chartConfig,
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'Spend',
+                    data: [],
+                    borderColor: '#EF4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    fill: true
+                },
+                {
+                    label: 'Sales',
+                    data: [],
+                    borderColor: '#10B981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    fill: true
+                }
+            ]
+        }
+    });
+
+    // CTR Chart
+    const ctrCtx = document.getElementById('ctrChart').getContext('2d');
+    ctrChart = new Chart(ctrCtx, {
+        ...chartConfig,
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'CTR',
+                data: [],
+                borderColor: '#3B82F6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                fill: true
+            }]
+        }
+    });
+
+    // CPC Chart
+    const cpcCtx = document.getElementById('cpcChart').getContext('2d');
+    cpcChart = new Chart(cpcCtx, {
+        ...chartConfig,
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'CPC',
+                data: [],
+                borderColor: '#8B5CF6',
+                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                fill: true
+            }]
+        }
+    });
+
+    // Conversion Rate Chart
+    const conversionRateCtx = document.getElementById('conversionRateChart').getContext('2d');
+    conversionRateChart = new Chart(conversionRateCtx, {
+        ...chartConfig,
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Conversion Rate',
+                data: [],
+                borderColor: '#F59E0B',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                fill: true
+            }]
+        }
+    });
+}
+
+// Fetch and update data
+function fetchData() {
+    const picker = $('#daterange').data('daterangepicker');
+    if (!picker) {
+        console.warn('DateRangePicker not initialized yet');
+        return;
+    }
+
+    const params = {
+        start_date: picker.startDate.format('YYYY-MM-DD'),
+        end_date: picker.endDate.format('YYYY-MM-DD'),
+        campaign: $('#campaign').val() || '',
+        ad_group: $('#adGroup').val() || '',
+        targeting_type: $('#targetingType').val() || ''
+    };
+
+    $.get('/api/analytics/advertising', params)
+        .done(function(response) {
+            updateCharts(response);
+            updateMetrics(response);
+            showToast('Data updated successfully', 'success');
+        })
+        .fail(function(error) {
+            console.error('Error fetching data:', error);
+            showToast('Error fetching data: ' + (error.responseJSON?.error || 'Unknown error'), 'error');
+        });
+}
+
+// Update charts with new data
+function updateCharts(data) {
+    // Update Spend vs Sales Chart
+    spendSalesChart.data.labels = data.labels;
+    spendSalesChart.data.datasets[0].data = data.spend;
+    spendSalesChart.data.datasets[1].data = data.sales;
+    spendSalesChart.update();
+
+    // Update CTR Chart
+    ctrChart.data.labels = data.labels;
+    ctrChart.data.datasets[0].data = data.ctr;
+    ctrChart.update();
+
+    // Update CPC Chart
+    cpcChart.data.labels = data.labels;
+    cpcChart.data.datasets[0].data = data.cpc;
+    cpcChart.update();
+
+    // Update Conversion Rate Chart
+    conversionRateChart.data.labels = data.labels;
+    conversionRateChart.data.datasets[0].data = data.conversion_rates;
+    conversionRateChart.update();
+
+    // Update metric cards
+    document.getElementById('totalSpend').textContent = 
+        '$' + data.total_spend.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('totalSales').textContent = 
+        '$' + data.total_sales.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('totalClicks').textContent = 
+        data.total_clicks.toLocaleString('en-US');
+    document.getElementById('acos').textContent = 
+        data.acos.toFixed(2) + '%';
+}
+</script>
+{% endblock %} 

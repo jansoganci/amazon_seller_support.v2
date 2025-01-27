@@ -1,0 +1,119 @@
+{% extends "base_tailwind.html" %}
+
+{% block title %}Return Report{% endblock %}
+
+{% block content %}
+<!-- Toast Container -->
+<div id="toastContainer" class="fixed top-4 right-4 z-50"></div>
+
+<div class="p-4 bg-white dark:bg-gray-900">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Return Report</h1>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Monitor your product returns and customer feedback</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <!-- Fixed Day Filters -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Period</label>
+            <select id="period" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <option value="7">Last 7 Days</option>
+                <option value="30">Last 30 Days</option>
+                <option value="90">Last 90 Days</option>
+            </select>
+        </div>
+        <!-- Date Range Picker Input -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date Range</label>
+            <input type="text" id="daterange" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ASIN</label>
+            <select id="asin" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <option value="">All ASINs</option>
+                {% for asin in asins %}
+                <option value="{{ asin }}">{{ asin }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Return Reason</label>
+            <select id="returnReason" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <option value="">All Reasons</option>
+                {% for reason in return_reasons %}
+                <option value="{{ reason }}">{{ reason }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <!-- Charts Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        <!-- Return Rate Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Return Rate Over Time</h3>
+            <canvas id="returnRateChart"></canvas>
+        </div>
+        <!-- Return Reasons Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Return Reasons Distribution</h3>
+            <canvas id="returnReasonsChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Metrics Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <!-- Total Returns Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Returns</h4>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2" id="totalReturns">-</p>
+        </div>
+        <!-- Total Refund Amount Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Refund Amount</h4>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2" id="totalRefund">-</p>
+        </div>
+        <!-- Return Rate Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Return Rate</h4>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2" id="returnRate">-</p>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div class="p-4">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Return Details</h3>
+            <div class="overflow-x-auto">
+                <table id="returnTable" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Return Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Order ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ASIN</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Product Title</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Quantity</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Return Reason</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Refund Amount</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700" id="returnTableBody">
+                        <!-- Data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript Dependencies -->
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<script src="{{ url_for('static', filename='js/return_report.js') }}"></script>
+{% endblock %}
+{% endblock %} 

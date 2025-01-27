@@ -1,4 +1,0 @@
-store_id,asin,title,units_available,units_inbound,units_reserved,reorder_required
-1,B001TEST1,Test Product 1,100,50,10,true
-1,B001TEST2,Test Product 2,50,25,5,false
-1,B001TEST3,Test Product 3,75,30,8,true

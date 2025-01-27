@@ -1,0 +1,114 @@
+// Version Requirements
+- Python: 3.12+
+- Node.js: 18+
+- TailwindCSS: 3.4.1
+- Flask: 3.0.1
+- SQLAlchemy: 2.0.25
+- Pandas: 2.1.4
+- Alpine.js: 3.13.3
+- Chart.js: 4.4.1
+
+// Project Structure Rules
+- Backend code must reside in `/app/`.
+- Templates (HTML) must be in `/app/templates/`.
+- Static files (CSS, JS, images) must be in `/app/static/`.
+- Each module must have the following structure:
+  /app/modules/{module_name}/
+    - models.py
+    - routes.py
+    - services.py
+    - templates/
+    - static/
+
+// Naming Conventions
+- Python files: snake_case (e.g., `services.py`).
+- HTML files: kebab-case (e.g., `dashboard-view.html`).
+- CSS files: kebab-case (e.g., `button-styles.css`).
+- JavaScript files: camelCase (e.g., `formHelper.js`).
+- Test files: test_*.py (e.g., `test_routes.py`).
+
+// TailwindCSS Configuration
+- All TailwindCSS classes must follow class sorting rules.
+- Tree-shaking must be enabled in `tailwind.config.js` with the following:
+  content: [
+    "./app/templates/**/*.html",
+    "./app/static/src/**/*.js"
+  ]
+- Add `prettier-plugin-tailwindcss` for automatic class sorting.
+
+// Linting and Formatting Rules
+- JavaScript must pass ESLint checks.
+- Python must pass Flake8 and Black formatting checks.
+- Add the following ESLint configuration for TailwindCSS:
+  plugins: ["tailwindcss"],
+  rules: {
+    "tailwindcss/classnames-order": "warn",
+  }
+
+// Testing Rules
+- All Python tests must achieve at least 80% coverage.
+- Tests for modules must be placed in `/tests/modules/{module_name}/`.
+- Shared fixtures must be in `/tests/conftest.py`.
+- Integration tests must be included for all API endpoints.
+- E2E tests required for critical user flows.
+
+// Documentation Rules
+- API updates must be documented in `/docs/api.md`.
+- Technical updates must be documented in `/docs/technical.md`.
+- All new features must include user guide updates.
+- Code must include docstrings following Google style.
+- Update CHANGELOG.md for all notable changes.
+
+// Security Rules
+- JWT token authentication required for all protected routes.
+- Bcrypt password hashing mandatory for user credentials.
+- Environment variables must be used for all secrets.
+- CORS policies must be explicitly defined.
+- Input validation required on all form submissions.
+- Regular security dependency updates mandatory.
+
+// Git Workflow Rules
+- Branch naming convention:
+  - feature/: New features
+  - bugfix/: Bug fixes
+  - hotfix/: Critical fixes
+  - release/: Release preparations
+- Commit messages must follow Conventional Commits:
+  - feat: New features
+  - fix: Bug fixes
+  - docs: Documentation
+  - style: Code style
+  - refactor: Code refactoring
+  - test: Testing
+  - chore: Maintenance
+- Pull requests require:
+  - Minimum 1 reviewer approval
+  - All tests passing
+  - No linting errors
+  - Up-to-date with main branch
+
+// CI/CD Rules
+- GitHub Actions workflow must include:
+  - Automated testing
+  - Code coverage reporting
+  - Linting checks
+  - Security scanning
+- Pre-commit hooks mandatory for:
+  - Code formatting
+  - Linting
+  - Test running
+- Automated version bumping using semantic versioning
+- Deployment checks must verify:
+  - Database migrations
+  - Environment variables
+  - Dependencies installation
+
+// Deployment Rules
+- Before deployment, all linting and testing checks must pass.
+- Use Gunicorn for production with a minimum of 4 workers.
+- TailwindCSS static files must be built and served via a CDN or file server.
+- Regular database backups required.
+- Zero-downtime deployment required.
+- Rollback strategy must be in place.
+- Health check endpoints must be implemented.
+- Monitoring and logging must be configured.

@@ -1,0 +1,64 @@
+{% extends "base_tailwind.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Uploaded Reports</h2>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">You can check all your uploaded reports here.</p>
+    </div>
+
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
+        <!-- Business Reports Card -->
+        <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700">
+            <div class="p-6">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white">Business Reports</h3>
+                <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Your uploaded business reports</p>
+                <div class="mt-4">
+                    <a href="{{ url_for('uploaded_data.business_reports') }}" class="text-primary-600 hover:text-primary-700 dark:text-primary-500 dark:hover:text-primary-400 text-sm font-medium">
+                        View Details →
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advertisement Reports Card -->
+        <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700">
+            <div class="p-6">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white">Advertisement Reports</h3>
+                <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Your uploaded advertising reports</p>
+                <div class="mt-4">
+                    <a href="{{ url_for('uploaded_data.advertising_reports') }}" class="text-primary-600 hover:text-primary-700 dark:text-primary-500 dark:hover:text-primary-400 text-sm font-medium">
+                        View Details →
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Reports Card -->
+        <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700">
+            <div class="p-6">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white">Inventory Reports</h3>
+                <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Your uploaded inventory reports</p>
+                <div class="mt-4">
+                    <a href="{{ url_for('uploaded_data.inventory_reports') }}" class="text-primary-600 hover:text-primary-700 dark:text-primary-500 dark:hover:text-primary-400 text-sm font-medium">
+                        View Details →
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Return Reports Card -->
+        <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700">
+            <div class="p-6">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white">Return Reports</h3>
+                <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Your uploaded return reports</p>
+                <div class="mt-4">
+                    <a href="{{ url_for('uploaded_data.return_reports') }}" class="text-primary-600 hover:text-primary-700 dark:text-primary-500 dark:hover:text-primary-400 text-sm font-medium">
+                        View Details →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

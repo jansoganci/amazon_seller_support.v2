@@ -1,0 +1,42 @@
+/* Metric Card Animations */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+.metric-card {
+    transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Threshold Indicators */
+.metric-card.warning {
+    border-color: #fbbf24;
+    animation: pulse 2s infinite;
+}
+
+.metric-card.critical {
+    border-color: #ef4444;
+    animation: pulse 1.5s infinite;
+}
+
+/* Tooltip Styles */
+.metric-info-tooltip {
+    transition: opacity 0.3s ease;
+}
+
+.metric-info-button:hover + .metric-info-tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Sparkline Container */
+.sparkline {
+    width: 100%;
+    height: 30px;
+}

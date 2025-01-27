@@ -1,0 +1,91 @@
+{% extends 'base_tailwind.html' %}
+
+{% block title %}Inventory Reports{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header Section -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Inventory Reports</h1>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">View your inventory report data</p>
+    </div>
+
+    <!-- Table Section -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">SKU</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ASIN</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Product Name</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider hidden lg:table-cell">Condition</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Price</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider hidden xl:table-cell">MFN Listed</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">MFN Fulfillable</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider hidden xl:table-cell">AFN Listed</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">AFN Warehouse</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">AFN Fulfillable</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider hidden lg:table-cell">AFN Unsellable</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">AFN Reserved</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">AFN Total</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider hidden 2xl:table-cell">Volume</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for report in reports %}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            {{ report.date.strftime('%Y-%m-%d') }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            {{ report.sku }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            {{ report.asin }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            {{ report.product_name }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white hidden lg:table-cell">
+                            {{ report.condition }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            ${{ "%.2f"|format(report.price) }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white hidden xl:table-cell">
+                            {{ "Yes" if report.mfn_listing_exists else "No" }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            {{ report.mfn_fulfillable_quantity }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white hidden xl:table-cell">
+                            {{ "Yes" if report.afn_listing_exists else "No" }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            {{ report.afn_warehouse_quantity }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            {{ report.afn_fulfillable_quantity }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white hidden lg:table-cell">
+                            {{ report.afn_unsellable_quantity }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            {{ report.afn_reserved_quantity }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            {{ report.afn_total_quantity }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white hidden 2xl:table-cell">
+                            {{ "%.4f"|format(report.per_unit_volume) }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %} 

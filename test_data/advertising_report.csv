@@ -1,0 +1,11 @@
+store_id,date,campaign_name,ad_group_name,targeting_type,match_type,search_term,impressions,clicks,ctr,cpc,spend,total_sales,acos,total_orders,total_units,conversion_rate
+1,2024-01-09,Winter Sale 2024,Electronics,AUTO,broad,wireless earbuds,1250,45,0.0360,0.35,15.75,125.50,0.1255,5,6,0.1111
+1,2024-01-09,New Year Promo,Home Office,MANUAL,exact,ergonomic chair,980,32,0.0327,0.42,13.44,189.99,0.0707,3,3,0.0938
+1,2024-01-10,Tech Gadgets,Mobile Accessories,AUTO,broad,phone charger fast,2100,78,0.0371,0.28,21.84,156.75,0.1393,7,8,0.0897
+1,2024-01-10,Back to School,Study Essentials,MANUAL,phrase,laptop stand adjustable,1560,55,0.0353,0.31,17.05,245.90,0.0693,6,7,0.1091
+1,2024-01-11,Home Office Pro,Desk Setup,AUTO,broad,monitor mount dual,1890,67,0.0354,0.38,25.46,299.95,0.0849,8,8,0.1194
+1,2024-01-11,Gaming Gear,Gaming Accessories,MANUAL,exact,mechanical keyboard rgb,2300,89,0.0387,0.45,40.05,479.92,0.0835,12,15,0.1348
+1,2024-01-12,Smart Home,Home Automation,AUTO,broad,smart plug wifi,1670,58,0.0347,0.25,14.50,174.93,0.0829,9,12,0.1552
+1,2024-01-12,Audio Elite,Headphones,MANUAL,phrase,noise cancelling headphones,2450,95,0.0388,0.52,49.40,598.95,0.0825,15,15,0.1579
+1,2024-01-13,Mobile Pro,Phone Accessories,AUTO,broad,phone stand desk,1230,43,0.0350,0.22,9.46,114.95,0.0823,6,8,0.1395
+1,2024-01-13,Work From Home,Office Equipment,MANUAL,exact,webcam 1080p,1890,72,0.0381,0.48,34.56,419.93,0.0823,11,11,0.1528

@@ -1,0 +1,145 @@
+<!-- Navigation -->
+<nav class="h-full px-3 py-4">
+  <ul class="space-y-2">
+    <!-- Dashboard -->
+    <li>
+      <a
+        href="{{ url_for('dashboard.index') }}"
+        class="flex items-center p-2 text-base font-normal rounded-lg {% if request.endpoint == 'dashboard.index' %}bg-gray-100 dark:bg-gray-700 text-primary-600 dark:text-primary-400{% else %}text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700{% endif %}"
+      >
+        <svg
+          class="w-6 h-6 {% if request.endpoint == 'dashboard.index' %}text-primary-600 dark:text-primary-400{% else %}text-gray-500 dark:text-gray-400{% endif %} transition duration-75 group-hover:text-gray-900 dark:group-hover:text-white"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+          ></path>
+        </svg>
+        <span class="ml-3">Dashboard</span>
+      </a>
+    </li>
+
+    <!-- Analytics -->
+    <li>
+      <a
+        href="{{ url_for('analytics.index') }}"
+        class="flex items-center p-2 text-base font-normal rounded-lg {% if request.endpoint == 'analytics.index' %}bg-gray-100 dark:bg-gray-700 text-primary-600 dark:text-primary-400{% else %}text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700{% endif %}"
+      >
+        <svg
+          class="w-6 h-6 {% if request.endpoint == 'analytics.index' %}text-primary-600 dark:text-primary-400{% else %}text-gray-500 dark:text-gray-400{% endif %} transition duration-75 group-hover:text-gray-900 dark:group-hover:text-white"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+          ></path>
+        </svg>
+        <span class="ml-3">Analytics</span>
+      </a>
+    </li>
+
+    <!-- CSV Upload -->
+    <li>
+      <a
+        href="{{ url_for('csv.upload') }}"
+        class="flex items-center p-2 text-base font-normal rounded-lg {% if request.endpoint == 'csv.upload' %}bg-gray-100 dark:bg-gray-700 text-primary-600 dark:text-primary-400{% else %}text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700{% endif %}"
+      >
+        <svg
+          class="w-6 h-6 {% if request.endpoint == 'csv.upload' %}text-primary-600 dark:text-primary-400{% else %}text-gray-500 dark:text-gray-400{% endif %} transition duration-75 group-hover:text-gray-900 dark:group-hover:text-white"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          ></path>
+        </svg>
+        <span class="ml-3">Upload CSV</span>
+      </a>
+    </li>
+
+    <!-- Uploaded Datas -->
+    <li>
+      <a
+        href="{{ url_for('uploaded_datas.index') }}"
+        class="flex items-center p-2 text-base font-normal rounded-lg {% if request.endpoint == 'uploaded_datas.index' %}bg-gray-100 dark:bg-gray-700 text-primary-600 dark:text-primary-400{% else %}text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700{% endif %}"
+      >
+        <svg
+          class="w-6 h-6 {% if request.endpoint == 'uploaded_datas.index' %}text-primary-600 dark:text-primary-400{% else %}text-gray-500 dark:text-gray-400{% endif %} transition duration-75 group-hover:text-gray-900 dark:group-hover:text-white"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"
+          ></path>
+        </svg>
+        <span class="ml-3">Uploaded Datas</span>
+      </a>
+    </li>
+
+    <!-- Stores -->
+    <li>
+      <a
+        href="{{ url_for('stores.index') }}"
+        class="flex items-center p-2 text-base font-normal rounded-lg {% if request.endpoint == 'stores.index' %}bg-gray-100 dark:bg-gray-700 text-primary-600 dark:text-primary-400{% else %}text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700{% endif %}"
+      >
+        <svg
+          class="w-6 h-6 {% if request.endpoint == 'stores.index' %}text-primary-600 dark:text-primary-400{% else %}text-gray-500 dark:text-gray-400{% endif %} transition duration-75 group-hover:text-gray-900 dark:group-hover:text-white"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1z M16 16V6a1 1 0 011-1h8a1 1 0 011 1v10a1 1 0 01-1 1h-8a1 1 0 01-1-1z"
+          ></path>
+        </svg>
+        <span class="ml-3">Stores</span>
+      </a>
+    </li>
+
+    <!-- Settings -->
+    <li>
+      <a
+        href="{{ url_for('settings.index') }}"
+        class="flex items-center p-2 text-base font-normal rounded-lg {% if request.endpoint == 'settings.index' %}bg-gray-100 dark:bg-gray-700 text-primary-600 dark:text-primary-400{% else %}text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700{% endif %}"
+      >
+        <svg
+          class="w-6 h-6 {% if request.endpoint == 'settings.index' %}text-primary-600 dark:text-primary-400{% else %}text-gray-500 dark:text-gray-400{% endif %} transition duration-75 group-hover:text-gray-900 dark:group-hover:text-white"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+          ></path>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+          ></path>
+        </svg>
+        <span class="ml-3">Settings</span>
+      </a>
+    </li>
+  </ul>
+</nav>

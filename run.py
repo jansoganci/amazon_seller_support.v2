@@ -1,11 +1,18 @@
 from app import create_app, db
-from flask_migrate import Migrate  # Import Flask-Migrate
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 app = create_app()
-migrate = Migrate(app, db)  # Initialize Flask-Migrate
 
 if __name__ == '__main__':
     with app.app_context():
-        # db.create_all()  # You can remove this line since Flask-Migrate will handle schema changes
-        pass
-    app.run(debug=True, port=3005)
+        # Create database tables
+        logger.info('Creating database tables...')
+        db.create_all()
+        logger.info('Database tables created successfully')
+    
+    logger.info('Starting application on http://127.0.0.1:3005')
+    app.run(host='127.0.0.1', port=3005, debug=True)

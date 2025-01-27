@@ -1,0 +1,118 @@
+{% extends "base_tailwind.html" %}
+
+{% block title %}Inventory Report{% endblock %}
+
+{% block content %}
+<!-- Toast Container -->
+<div id="toastContainer" class="fixed top-4 right-4 z-50"></div>
+
+<div class="p-4 bg-white dark:bg-gray-900">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Inventory Report</h1>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Monitor your inventory levels and stock movements</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <!-- Fixed Day Filters -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Period</label>
+            <select id="period" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <option value="7">Last 7 Days</option>
+                <option value="30">Last 30 Days</option>
+                <option value="90">Last 90 Days</option>
+            </select>
+        </div>
+        <!-- Date Range Picker Input -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date Range</label>
+            <input type="text" id="daterange" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ASIN</label>
+            <select id="asin" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <option value="">All ASINs</option>
+                {% for asin in asins %}
+                <option value="{{ asin }}">{{ asin }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Warehouse</label>
+            <select id="warehouse" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <option value="">All Warehouses</option>
+                {% for warehouse in warehouses %}
+                <option value="{{ warehouse }}">{{ warehouse }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <!-- Charts Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        <!-- Stock Levels Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Stock Levels Over Time</h3>
+            <canvas id="stockLevelsChart"></canvas>
+        </div>
+        <!-- Stock Distribution Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Stock Distribution</h3>
+            <canvas id="stockDistributionChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Metrics Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <!-- Total Stock Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Stock</h4>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2" id="totalStock">-</p>
+        </div>
+        <!-- Reserved Stock Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Reserved Stock</h4>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2" id="reservedStock">-</p>
+        </div>
+        <!-- Low Stock Items Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Low Stock Items</h4>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2" id="lowStockItems">-</p>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div class="p-4">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Inventory Details</h3>
+            <div class="overflow-x-auto">
+                <table id="inventoryTable" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ASIN</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">SKU</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Product Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Sellable</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Unsellable</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Reserved</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Warehouse</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700" id="inventoryTableBody">
+                        <!-- Data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript Dependencies -->
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<script src="{{ url_for('static', filename='js/inventory_report.js') }}"></script>
+{% endblock %}
+{% endblock %} 
