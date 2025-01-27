@@ -54,7 +54,7 @@ def get_advertising_trends(
             data[date_key]['impressions'] += report.impressions
             data[date_key]['clicks'] += report.clicks
             data[date_key]['spend'] += float(report.spend)
-            data[date_key]['sales'] += float(report.sales)
+            data[date_key]['sales'] += float(report.total_sales)
             data[date_key]['orders'] += report.orders
             data[date_key]['units'] += report.units
 
@@ -103,7 +103,7 @@ def get_advertising_trends(
 
         prev_reports = prev_query.all()
         previous_spend = sum(float(r.spend) for r in prev_reports)
-        previous_sales = sum(float(r.sales) for r in prev_reports)
+        previous_sales = sum(float(r.total_sales) for r in prev_reports)
 
         spend_growth = ((total_spend - previous_spend) / previous_spend * 100) if previous_spend > 0 else 0
         sales_growth = ((total_sales - previous_sales) / previous_sales * 100) if previous_sales > 0 else 0
@@ -177,10 +177,14 @@ def _get_empty_trend_data() -> Dict:
 class AdvertisingReportService:
     """Service class for advertising report operations."""
 
-    def get_advertising_data(self, store_id, start_date=None, end_date=None, campaign=None, ad_group=None):
+    def __init__(self, store_id: int):
+        """Initialize service with store_id."""
+        self.store_id = store_id
+
+    def get_advertising_data(self, start_date=None, end_date=None, campaign=None, ad_group=None):
         """Get advertising data based on filters."""
         # Build base query
-        query = AdvertisingReport.query.filter(AdvertisingReport.store_id == store_id)
+        query = AdvertisingReport.query.filter(AdvertisingReport.store_id == self.store_id)
 
         # Apply date filters
         if start_date:
@@ -210,25 +214,25 @@ class AdvertisingReportService:
             'campaigns': campaigns_data
         }
 
-    def get_campaigns(self, store_id):
+    def get_campaigns(self):
         """Get list of unique campaign names for the store."""
         campaigns = db.session.query(
             AdvertisingReport.campaign_name,
             func.count(AdvertisingReport.id).label('ad_count')
         ).filter(
-            AdvertisingReport.store_id == store_id
+            AdvertisingReport.store_id == self.store_id
         ).group_by(
             AdvertisingReport.campaign_name
         ).all()
 
         return [{'name': c.campaign_name, 'ad_count': c.ad_count} for c in campaigns]
 
-    def get_ad_groups(self, store_id, campaign=None):
+    def get_ad_groups(self, campaign=None):
         """Get list of unique ad group names for the store and campaign."""
         query = db.session.query(
             AdvertisingReport.ad_group_name,
             func.count(AdvertisingReport.id).label('ad_count')
-        ).filter(AdvertisingReport.store_id == store_id)
+        ).filter(AdvertisingReport.store_id == self.store_id)
 
         if campaign:
             query = query.filter(AdvertisingReport.campaign_name == campaign)
@@ -237,7 +241,7 @@ class AdvertisingReportService:
 
         return [{'name': g.ad_group_name, 'ad_count': g.ad_count} for g in ad_groups]
 
-    def get_trends(self, store_id, start_date=None, end_date=None, campaign=None):
+    def get_trends(self, start_date=None, end_date=None, campaign=None):
         """Get advertising trends data."""
         # Build base query
         query = db.session.query(
@@ -245,8 +249,8 @@ class AdvertisingReportService:
             func.sum(AdvertisingReport.impressions).label('impressions'),
             func.sum(AdvertisingReport.clicks).label('clicks'),
             func.sum(AdvertisingReport.spend).label('spend'),
-            func.sum(AdvertisingReport.sales).label('sales')
-        ).filter(AdvertisingReport.store_id == store_id)
+            func.sum(AdvertisingReport.total_sales).label('sales')
+        ).filter(AdvertisingReport.store_id == self.store_id)
 
         # Apply filters
         if start_date:
@@ -270,7 +274,7 @@ class AdvertisingReportService:
 
         for report in reports:
             dates.append(report.date.strftime('%Y-%m-%d'))
-            acos = (report.spend / report.sales * 100) if report.sales > 0 else 0
+            acos = (report.spend / report.total_sales * 100) if report.total_sales > 0 else 0
             acos_data.append(round(acos, 2))
             spend_data.append(round(report.spend, 2))
 
@@ -300,7 +304,7 @@ class AdvertisingReportService:
     def _calculate_summary_metrics(self, reports):
         """Calculate summary metrics from reports."""
         total_spend = sum(r.spend for r in reports)
-        total_sales = sum(r.sales for r in reports)
+        total_sales = sum(r.total_sales for r in reports)
         total_impressions = sum(r.impressions for r in reports)
         total_clicks = sum(r.clicks for r in reports)
 
@@ -337,7 +341,7 @@ class AdvertisingReportService:
             camp['impressions'] += report.impressions
             camp['clicks'] += report.clicks
             camp['spend'] += report.spend
-            camp['sales'] += report.sales
+            camp['sales'] += report.total_sales
 
         # Calculate metrics for each campaign
         for camp in campaigns.values():
@@ -412,7 +416,7 @@ class AdvertisingReportService:
 
             # Calculate metrics
             total_spend = float(df['spend'].sum())
-            total_sales = float(df['sales'].sum())
+            total_sales = float(df['total_sales'].sum())
             total_impressions = int(df['impressions'].sum())
             total_clicks = int(df['clicks'].sum())
 

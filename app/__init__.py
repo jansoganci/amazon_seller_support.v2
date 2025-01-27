@@ -44,7 +44,6 @@ def create_app(config_object=None):
     # Import models
     from app.models import User
     from app.modules.business.models import BusinessReport
-    from app.modules.category.models.category import Category, ASINKategori
 
     @login_manager.user_loader
     def load_user(id):
@@ -60,10 +59,20 @@ def create_app(config_object=None):
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
     # Register blueprints and extensions
-    from app.modules import business, category
-    
-    business.init_app(app)
-    category.init_app(app)
+    from app.modules.business.routes import bp as business_bp
+    app.register_blueprint(business_bp)
+
+    # Register advertising blueprint
+    from app.modules.advertising.routes import bp as advertising_bp
+    app.register_blueprint(advertising_bp)
+
+    # Register inventory blueprint
+    from app.modules.inventory.routes import bp as inventory_bp
+    app.register_blueprint(inventory_bp)
+
+    # Register returns blueprint
+    from app.modules.returns.routes import bp as returns_bp
+    app.register_blueprint(returns_bp)
 
     # Register dashboard blueprint
     from app.modules.dashboard.routes import bp as dashboard_bp

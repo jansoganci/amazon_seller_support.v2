@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 class BusinessReportService:
     """Service for handling business report operations."""
     
-    def __init__(self, store_id: Optional[int] = None):
+    def __init__(self, store_id: int):
         """Initialize the service with store ID."""
         self.store_id = store_id
         register_metrics()  # Register business metrics
@@ -256,47 +256,50 @@ class BusinessReportService:
                 
         return growth_rates
     
-    def get_categories(self) -> List[Dict[str, str]]:
-        """Get unique categories and subcategories."""
-        if not self.store_id:
-            raise ValueError("store_id is required")
+    # def get_categories(self) -> List[Dict[str, str]]:
+    #     """Get unique categories and subcategories."""
+    #     if not self.store_id:
+    #         raise ValueError("store_id is required")
 
-        results = db.session.query(
-            BusinessReport.category,
-            BusinessReport.subcategory
-        ).filter(
-            BusinessReport.store_id == self.store_id,
-            BusinessReport.category.isnot(None)
-        ).distinct().all()
+    #     results = db.session.query(
+    #         BusinessReport.category,
+    #         BusinessReport.subcategory
+    #     ).filter(
+    #         BusinessReport.store_id == self.store_id,
+    #         BusinessReport.category.isnot(None)
+    #     ).distinct().all()
 
-        categories = []
-        for category, subcategory in results:
-            if category and category not in [c['name'] for c in categories]:
-                categories.append({
-                    'name': category,
-                    'subcategories': []
-                })
-            if subcategory:
-                for cat in categories:
-                    if cat['name'] == category and subcategory not in cat['subcategories']:
-                        cat['subcategories'].append(subcategory)
+    #     categories = []
+    #     for category, subcategory in results:
+    #         if category and category not in [c['name'] for c in categories]:
+    #             categories.append({
+    #                 'name': category,
+    #                 'subcategories': []
+    #             })
+    #         if subcategory:
+    #             for cat in categories:
+    #                 if cat['name'] == category and subcategory not in cat['subcategories']:
+    #                     cat['subcategories'].append(subcategory)
 
-        return categories
+    #     return categories
     
     def get_asins(self) -> List[Dict[str, str]]:
         """Get unique ASINs."""
         if not self.store_id:
             raise ValueError("store_id is required")
-            
-        return [
-            {'asin': asin, 'title': title}
-            for asin, title in db.session.query(
-                BusinessReport.asin,
-                BusinessReport.title
-            ).distinct().filter(
-                BusinessReport.store_id == self.store_id
-            ).all()
-        ]
+
+        results = db.session.query(
+            BusinessReport.asin,
+            BusinessReport.product_name
+        ).filter(
+            BusinessReport.store_id == self.store_id,
+            BusinessReport.asin.isnot(None)
+        ).distinct().all()
+
+        return [{
+            'asin': asin,
+            'name': product_name
+        } for asin, product_name in results]
     
     def _build_base_query(
         self,

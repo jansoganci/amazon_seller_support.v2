@@ -252,12 +252,13 @@ def dashboard():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@bp.route('/<int:store_id>/report')
+@bp.route('/business_report')
 @login_required
 @store_required
-def report(store_id):
+def business_report():
     """Render the business report page with initial data."""
     try:
+        store_id = current_user.active_store_id
         logger.debug(f"Loading business report for store_id: {store_id}")
         
         if not current_user.has_store_access(store_id):
@@ -314,17 +315,15 @@ def report(store_id):
         
         logger.debug(f"Formatted data: {formatted_data}")
         
-        # Get filter options
-        logger.debug("Fetching categories and ASINs")
-        categories = service.get_categories()
+        # Get ASINs for filtering
+        logger.debug("Fetching ASINs")
         asins = service.get_asins()
-        logger.debug(f"Found {len(categories)} categories and {len(asins)} ASINs")
+        logger.debug(f"Found {len(asins)} ASINs")
         
         return render_template(
             'business_report.html',
             store_id=store_id,
             initial_data=formatted_data,
-            categories=categories,
             asins=asins,
             metrics=BUSINESS_METRICS
         )
@@ -334,12 +333,13 @@ def report(store_id):
         flash('An error occurred while loading the report', 'error')
         return redirect(url_for('dashboard.index'))
 
-@bp.route('/<int:store_id>/api/report-data')
+@bp.route('/api/report-data')
 @login_required
 @store_required
-def get_report_data(store_id):
+def get_report_data():
     """Get report data for the specified store."""
     try:
+        store_id = current_user.active_store_id
         if not current_user.has_store_access(store_id):
             return jsonify({'error': 'No access to this store'}), 403
             
@@ -363,12 +363,13 @@ def get_report_data(store_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
-@bp.route('/<int:store_id>/api/chart-data/<string:period>')
+@bp.route('/api/chart-data/<string:period>')
 @login_required
 @store_required
-def get_chart_data(store_id, period):
+def get_chart_data(period):
     """Get chart data for the specified store and period."""
     try:
+        store_id = current_user.active_store_id
         if not current_user.has_store_access(store_id):
             return jsonify({'error': 'No access to this store'}), 403
             
@@ -401,14 +402,14 @@ def get_trends():
     """API endpoint to get business trend data."""
     try:
         # Get and validate parameters
-        store_id = request.args.get('store_id', type=int)
+        store_id = current_user.active_store_id
         start_date = request.args.get('startDate', type=str)
         end_date = request.args.get('endDate', type=str)
         group_by = request.args.get('groupBy', 'daily')
         category = request.args.get('category')
         asin = request.args.get('asin')
         
-        if not all([store_id, start_date, end_date]):
+        if not all([start_date, end_date]):
             return jsonify({'error': 'Missing required parameters'}), 400
             
         if not current_user.has_store_access(store_id):
@@ -436,10 +437,10 @@ def get_trends():
         logger.error(f"Error getting trend data: {str(e)}")
         return jsonify({'error': 'An error occurred while fetching trend data'}), 500
 
-@bp.route('/<store_id>/data')
+@bp.route('/data')
 @login_required
 @store_required
-def get_filtered_data(store_id):
+def get_filtered_data():
     """Get filtered business data."""
     try:
         start_date = request.args.get('start_date')
@@ -457,6 +458,7 @@ def get_filtered_data(store_id):
         except ValueError:
             return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
 
+        store_id = current_user.active_store_id
         service = BusinessReportService(store_id)
         try:
             data = service.get_filtered_data(

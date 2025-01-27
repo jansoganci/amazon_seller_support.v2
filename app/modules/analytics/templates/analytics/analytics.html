@@ -27,7 +27,7 @@
                     <span class="px-3 py-1 text-sm text-primary-600 bg-primary-100 rounded-full dark:bg-primary-900 dark:text-primary-300">Revenue</span>
                     <span class="px-3 py-1 text-sm text-primary-600 bg-primary-100 rounded-full dark:bg-primary-900 dark:text-primary-300">Trends</span>
                 </div>
-                <a href="{{ url_for('business.report', store_id=active_store_id) }}" class="inline-flex items-center w-full px-4 py-2 text-sm font-medium text-center text-white transition-colors duration-150 bg-primary-600 rounded-lg hover:bg-primary-700">
+                <a href="{{ url_for('business.business_report') }}" class="inline-flex items-center w-full px-4 py-2 text-sm font-medium text-center text-white transition-colors duration-150 bg-primary-600 rounded-lg hover:bg-primary-700">
                     View Reports
                     <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -99,7 +99,7 @@
                     <span class="px-3 py-1 text-sm text-primary-600 bg-primary-100 rounded-full dark:bg-primary-900 dark:text-primary-300">Refunds</span>
                     <span class="px-3 py-1 text-sm text-primary-600 bg-primary-100 rounded-full dark:bg-primary-900 dark:text-primary-300">Analysis</span>
                 </div>
-                <a href="{{ url_for('returns.return_report') }}" class="inline-flex items-center w-full px-4 py-2 text-sm font-medium text-center text-white transition-colors duration-150 bg-primary-600 rounded-lg hover:bg-primary-700">
+                <a href="{{ url_for('returns.returns_report') }}" class="inline-flex items-center w-full px-4 py-2 text-sm font-medium text-center text-white transition-colors duration-150 bg-primary-600 rounded-lg hover:bg-primary-700">
                     View Reports
                     <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>

@@ -4,10 +4,14 @@ from app.extensions import db
 from app.modules.returns.models import ReturnReport
 
 class ReturnReportService:
-    def get_return_data(self, store_id, start_date=None, end_date=None, asin=None, return_reason=None):
+    def __init__(self, store_id):
+        """Initialize service with store_id."""
+        self.store_id = store_id
+
+    def get_return_data(self, start_date=None, end_date=None, asin=None, return_reason=None):
         """Get return data based on filters."""
         # Build base query
-        query = ReturnReport.query.filter(ReturnReport.store_id == store_id)
+        query = ReturnReport.query.filter(ReturnReport.store_id == self.store_id)
 
         # Apply date filters
         if start_date:
@@ -37,14 +41,14 @@ class ReturnReportService:
             'return_items': return_items
         }
 
-    def get_asins(self, store_id):
+    def get_asins(self):
         """Get list of unique ASINs for the store."""
         asins = db.session.query(
             ReturnReport.asin,
             ReturnReport.title,
             func.count(ReturnReport.id).label('return_count')
         ).filter(
-            ReturnReport.store_id == store_id
+            ReturnReport.store_id == self.store_id
         ).group_by(
             ReturnReport.asin,
             ReturnReport.title
@@ -56,13 +60,13 @@ class ReturnReportService:
             'return_count': a.return_count
         } for a in asins]
 
-    def get_return_reasons(self, store_id):
+    def get_return_reasons(self):
         """Get list of unique return reasons for the store."""
         reasons = db.session.query(
             ReturnReport.return_reason,
             func.count(ReturnReport.id).label('count')
         ).filter(
-            ReturnReport.store_id == store_id
+            ReturnReport.store_id == self.store_id
         ).group_by(
             ReturnReport.return_reason
         ).all()
@@ -72,7 +76,7 @@ class ReturnReportService:
             'count': r.count
         } for r in reasons]
 
-    def get_trends(self, store_id, start_date=None, end_date=None, asin=None):
+    def get_trends(self, start_date=None, end_date=None, asin=None):
         """Get return trends data."""
         # Build base query
         query = db.session.query(
@@ -80,7 +84,7 @@ class ReturnReportService:
             func.count(ReturnReport.id).label('returns'),
             func.sum(ReturnReport.quantity).label('quantity'),
             func.sum(ReturnReport.refund_amount).label('refund_amount')
-        ).filter(ReturnReport.store_id == store_id)
+        ).filter(ReturnReport.store_id == self.store_id)
 
         # Apply filters
         if start_date:
