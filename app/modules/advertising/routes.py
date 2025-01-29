@@ -2,7 +2,8 @@
 
 from datetime import datetime, timedelta
 from flask import Blueprint, jsonify, request, render_template, flash, redirect, url_for, current_app, send_file
-from flask_login import login_required, current_user
+from app.utils.decorators import login_required, admin_required, store_required
+from flask_login import current_user
 from app.utils.analytics_engine import AnalyticsEngine
 from app.core.models import Store
 from app.modules.advertising.models import AdvertisingReport
@@ -13,7 +14,6 @@ import os
 import pandas as pd
 from app.modules.advertising.constants import ERROR_MESSAGES
 from app.modules.upload_csv.exceptions import CSVError
-from app.utils.decorators import store_required
 from app.modules.advertising.services import AdvertisingReportService
 
 logger = logging.getLogger(__name__)

@@ -7,6 +7,7 @@ import pandas as pd
 from datetime import datetime, UTC, timedelta
 from decimal import Decimal
 from pathlib import Path
+from sqlalchemy import text
 
 from app import create_app
 from app.extensions import db, bcrypt
@@ -16,28 +17,36 @@ from app.modules.business.models import BusinessReport
 from app.modules.inventory.models import InventoryReport
 from app.modules.returns.models import ReturnReport
 from app.modules.advertising.models import AdvertisingReport
+from app.modules.category.models.category import Category, ASINCategory
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def app():
-    """Create a test app."""
-    from app import create_app
+    """Create a Flask application for testing."""
     from app.config import TestingConfig
+    
     app = create_app(TestingConfig)
-    app.config['TESTING'] = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-    app.config['WTF_CSRF_ENABLED'] = False
-    app.config['SERVER_NAME'] = 'localhost'
-    return app
+    
+    with app.app_context():
+        db.create_all()  # Create all tables
+        yield app
+        db.session.remove()
+        db.drop_all()  # Drop all tables after tests
 
 @pytest.fixture
-def db(app):
+def database(app):
     """Create a fresh database for each test."""
-    from app.extensions import db as _db
     with app.app_context():
-        _db.create_all()
-        yield _db
-        _db.session.remove()
-        _db.drop_all()
+        db.session.begin_nested()  # Create savepoint
+        yield db
+        db.session.rollback()  # Rollback to savepoint
+        db.session.execute(text('DELETE FROM users'))  # Clear users table
+        db.session.execute(text('DELETE FROM categories'))  # Clear categories table
+        db.session.execute(text('DELETE FROM asin_categories'))  # Clear ASIN categories
+        db.session.execute(text('DELETE FROM business_reports'))  # Clear business reports table
+        db.session.execute(text('DELETE FROM inventory_reports'))  # Clear inventory reports table
+        db.session.execute(text('DELETE FROM return_reports'))  # Clear return reports table
+        db.session.execute(text('DELETE FROM advertising_reports'))  # Clear advertising reports table
+        db.session.commit()
 
 @pytest.fixture
 def client(app):
@@ -45,40 +54,30 @@ def client(app):
     return app.test_client()
 
 @pytest.fixture
-def runner(app):
-    """Create a test CLI runner."""
-    return app.test_cli_runner()
-
-@pytest.fixture
-def test_user(db):
+def test_user(database):
     """Create a test user."""
-    from app.models.user import User
     user = User(
-        username='testuser',
-        email='test@example.com'
+        email='test@example.com',
+        password=bcrypt.generate_password_hash('password').decode('utf-8'),
+        role='admin'
     )
-    user.set_password('password123')
-    db.session.add(user)
-    db.session.commit()
+    database.session.add(user)
+    database.session.commit()
     return user
 
 @pytest.fixture
-def test_store(test_user, db):
+def test_store(test_user, database):
     """Create a test store."""
     store = Store(
         name='Test Store',
-        marketplace='amazon.com',
-        seller_id='ATVPDKIKX0DER',
-        active=True,
-        user_id=test_user.id  # Store'u user ile ilişkilendir
+        marketplace='US',
+        seller_id='A1B2C3D4E5',
+        auth_token='test_token',
+        refresh_token='test_refresh_token',
+        owner_id=test_user.id
     )
-    db.session.add(store)
-    db.session.commit()
-    
-    # User'ın active_store_id'sini güncelle
-    test_user.active_store_id = store.id
-    db.session.commit()
-    
+    database.session.add(store)
+    database.session.commit()
     return store
 
 @pytest.fixture
@@ -86,86 +85,97 @@ def auth_headers(client, test_user):
     """Get auth headers for test user."""
     response = client.post('/auth/login', json={
         'email': test_user.email,
-        'password': 'password123'
+        'password': 'password'
     })
-    assert response.status_code == 200
     token = response.json['access_token']
     return {'Authorization': f'Bearer {token}'}
 
 @pytest.fixture
 def sample_business_data():
     """Create sample business report data."""
-    base_date = datetime.now(UTC).date()
-    return [
-        {
-            'date': base_date - timedelta(days=i),
-            'asin': f'B00TEST{i%3 + 1}',
-            'title': f'Test Product {i%3 + 1}',
-            'category': 'Electronics' if i < 5 else 'Books',
-            'subcategory': 'Gadgets' if i < 5 else 'Fiction',
-            'ordered_product_sales': Decimal(str((i + 1) * 100)),
-            'units_ordered': (i + 1) * 10,
-            'sessions': (i + 1) * 100,
-            'page_views': (i + 1) * 150,
-            'buy_box_percentage': Decimal('95.00'),
-            'units_ordered_b2b': (i + 1) * 2,
-            'ordered_product_sales_b2b': Decimal(str((i + 1) * 20))
-        }
-        for i in range(10)
-    ]
+    return {
+        'date': datetime.now(UTC).date(),
+        'ordered_product_sales': Decimal('100.00'),
+        'units_ordered': 10,
+        'total_order_items': 10,
+        'average_selling_price': Decimal('10.00'),
+        'units_refunded': 1,
+        'refund_rate': Decimal('0.10'),
+        'claims_granted': 0,
+        'orders': 8,
+        'average_units_per_order': Decimal('1.25'),
+        'average_order_value': Decimal('12.50'),
+        'sessions': 100,
+        'session_percentage': Decimal('0.10'),
+        'page_views': 200,
+        'page_views_percentage': Decimal('0.20'),
+        'buy_box_percentage': Decimal('0.95'),
+        'unit_session_percentage': Decimal('0.10')
+    }
 
 @pytest.fixture
 def sample_business_df(sample_business_data):
     """Create a sample business report DataFrame."""
-    return pd.DataFrame(sample_business_data)
+    return pd.DataFrame([sample_business_data])
 
 @pytest.fixture
-def sample_business_report(db, test_store):
+def sample_business_report(database, test_store):
     """Create a sample business report."""
-    from app.modules.business.models import BusinessReport
     report = BusinessReport(
         store_id=test_store.id,
-        sku='TEST-SKU-001',
-        asin='B00TEST123',
-        title='Test Product',
-        ordered_product_sales=1000.00,
-        total_order_items=50,
-        sessions=200,
-        units_ordered=60,
-        conversion_rate=0.25,
-        date=datetime.now().date()
+        date=datetime.now(UTC).date(),
+        ordered_product_sales=Decimal('100.00'),
+        units_ordered=10,
+        total_order_items=10,
+        average_selling_price=Decimal('10.00'),
+        units_refunded=1,
+        refund_rate=Decimal('0.10'),
+        claims_granted=0,
+        orders=8,
+        average_units_per_order=Decimal('1.25'),
+        average_order_value=Decimal('12.50'),
+        sessions=100,
+        session_percentage=Decimal('0.10'),
+        page_views=200,
+        page_views_percentage=Decimal('0.20'),
+        buy_box_percentage=Decimal('0.95'),
+        unit_session_percentage=Decimal('0.10')
     )
-    db.session.add(report)
-    db.session.commit()
+    database.session.add(report)
+    database.session.commit()
     return report
 
 @pytest.fixture
 def mock_csv_file():
     """Create a mock CSV file for testing."""
-    temp_dir = tempfile.mkdtemp()
-    file_path = os.path.join(temp_dir, 'test.csv')
+    # Create a temporary file
+    temp = tempfile.NamedTemporaryFile(suffix='.csv', delete=False)
     
-    df = pd.DataFrame({
-        'Date': ['2024-01-01'],
-        'ASIN': ['B00TEST1'],
-        'Title': ['Test Product'],
-        'Category': ['Electronics'],
-        'Subcategory': ['Gadgets'],
-        'Ordered Product Sales': [1000.00],
-        'Units Ordered': [10],
-        'Sessions': [100],
-        'Page Views': [150],
-        'Buy Box Percentage': [95.00],
-        'Units Ordered - B2B': [2],
-        'Ordered Product Sales - B2B': [200.00]
-    })
+    # Sample data
+    data = {
+        'date': ['2024-01-01', '2024-01-02'],
+        'ordered_product_sales': ['100.00', '200.00'],
+        'units_ordered': ['10', '20'],
+        'total_order_items': ['10', '20'],
+        'average_selling_price': ['10.00', '10.00'],
+        'units_refunded': ['1', '2'],
+        'refund_rate': ['0.10', '0.10'],
+        'claims_granted': ['0', '0'],
+        'orders': ['8', '16'],
+        'average_units_per_order': ['1.25', '1.25'],
+        'average_order_value': ['12.50', '12.50'],
+        'sessions': ['100', '200'],
+        'session_percentage': ['0.10', '0.10'],
+        'page_views': ['200', '400'],
+        'page_views_percentage': ['0.20', '0.20'],
+        'buy_box_percentage': ['0.95', '0.95'],
+        'unit_session_percentage': ['0.10', '0.10']
+    }
     
-    df.to_csv(file_path, index=False)
-    yield file_path
+    df = pd.DataFrame(data)
+    df.to_csv(temp.name, index=False)
     
-    # Cleanup
-    os.unlink(file_path)
-    os.rmdir(temp_dir)
+    return temp.name
 
 @pytest.fixture
 def test_data_dir():
@@ -175,6 +185,5 @@ def test_data_dir():
 def pytest_configure(config):
     """Configure pytest for our tests."""
     config.addinivalue_line(
-        "markers",
-        "integration: mark test as integration test"
-    ) 
+        "markers", "slow: mark test as slow to run"
+    )

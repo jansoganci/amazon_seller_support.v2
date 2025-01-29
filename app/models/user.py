@@ -21,6 +21,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128))
     is_active = db.Column(db.Boolean, default=True)
+    role = db.Column(db.String(20), nullable=False, default='user')  # 'admin' or 'user'
     active_store_id = db.Column(db.Integer, db.ForeignKey('stores.id', name='fk_user_active_store'), nullable=True)
     preferences = db.Column(db.JSON, nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
@@ -71,6 +72,11 @@ class User(UserMixin, db.Model):
             
         # Check if user owns the store
         return bool(self.stores.filter_by(id=store_id).first())
+
+    @property
+    def is_admin(self) -> bool:
+        """Check if user has admin role."""
+        return self.role == 'admin'
 
     @staticmethod
     def verify_token(token):

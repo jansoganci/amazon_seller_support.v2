@@ -44,6 +44,7 @@ def create_app(config_object=None):
     # Import models
     from app.models import User
     from app.modules.business.models import BusinessReport
+    from app.modules.category.models.category import Category, ASINCategory
 
     @login_manager.user_loader
     def load_user(id):
@@ -97,6 +98,10 @@ def create_app(config_object=None):
     # Register analytics blueprint
     from app.modules.analytics.routes import bp as analytics_bp
     app.register_blueprint(analytics_bp)
+
+    # Register category blueprint
+    from app.modules.category.routes import bp as category_bp
+    app.register_blueprint(category_bp)
 
     # Register auth blueprint
     from app.modules.auth.routes import bp as auth_bp

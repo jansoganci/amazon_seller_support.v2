@@ -10,7 +10,7 @@ from sqlalchemy.orm import Query
 
 from app.extensions import db
 from app.modules.business.models import BusinessReport
-from app.modules.category.models import Category, ASINKategori
+from app.modules.category.models import Category, ASINCategory
 from app.modules.business.constants import (
     GROUPING_OPTIONS,
     DEFAULT_GROUP_BY,
@@ -505,7 +505,7 @@ class CategoryService:
         Returns:
             ASIN category mapping if found, None otherwise
         """
-        asin_cat = ASINKategori.query.filter_by(asin=asin).first()
+        asin_cat = ASINCategory.query.filter_by(asin=asin).first()
         if not asin_cat:
             return None
             
@@ -538,14 +538,14 @@ class CategoryService:
             ValueError: If category not found
         """
         # Create or update ASIN category
-        asin_cat = ASINKategori.query.filter_by(asin=asin).first()
+        asin_cat = ASINCategory.query.filter_by(asin=asin).first()
         if asin_cat:
             asin_cat.main_category = main_category
             asin_cat.sub_category = sub_category if sub_category else main_category
             if title:
                 asin_cat.title = title
         else:
-            asin_cat = ASINKategori(
+            asin_cat = ASINCategory(
                 asin=asin,
                 main_category=main_category,
                 sub_category=sub_category if sub_category else main_category,

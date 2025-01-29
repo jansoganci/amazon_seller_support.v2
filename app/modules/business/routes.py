@@ -1,3 +1,5 @@
+"""Business routes."""
+
 from datetime import datetime, timedelta
 from flask import Blueprint, jsonify, request, render_template, flash, redirect, url_for, current_app, send_file
 from flask_login import login_required, current_user

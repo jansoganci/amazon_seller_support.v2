@@ -7,7 +7,7 @@ from app.extensions import db
 from .user import User
 from .store import Store
 from app.modules.business.models import BusinessReport
-from app.modules.category.models import Category, ASINKategori
+from app.modules.category.models import Category, ASINCategory
 from app.modules.advertising.models import AdvertisingReport
 from app.modules.inventory.models import InventoryReport
 from app.modules.returns.models import ReturnReport
@@ -24,7 +24,7 @@ __all__ = [
     'InventoryReport',
     'ReturnReport',
     'Category',
-    'ASINKategori'
+    'ASINCategory'
 ]
 
 # Ensure all models are loaded

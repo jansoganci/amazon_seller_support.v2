@@ -1,26 +1,36 @@
-"""Custom decorators."""
+"""Authentication and authorization decorators."""
 
 from functools import wraps
-from flask import abort, request, redirect, url_for, flash
+from flask import jsonify, current_app
 from flask_login import current_user
 
-def store_required(f):
-    """Store erişim kontrolü için decorator."""
+def login_required(f):
+    """Require user to be logged in."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        # Önce route'dan veya query string'den store_id'yi kontrol et
-        store_id = kwargs.get('store_id') or request.args.get('store_id') or request.form.get('store_id')
-        
-        # Eğer store_id yoksa active_store_id'yi kontrol et
-        if not store_id and hasattr(current_user, 'active_store_id'):
-            store_id = current_user.active_store_id
-            
-        if not store_id:
-            flash('Please select a store first.', 'warning')
-            return redirect(url_for('stores.index'))
-            
-        if not current_user.has_store_access(store_id):
-            abort(403, description="You don't have access to this store")
-            
+        if not current_user.is_authenticated:
+            return jsonify({"error": "Authentication required"}), 401
         return f(*args, **kwargs)
-    return decorated_function 
+    return decorated_function
+
+def store_required(f):
+    """Require user to have an active store."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return jsonify({"error": "Authentication required"}), 401
+        if not current_user.active_store:
+            return jsonify({"error": "Active store required"}), 403
+        return f(*args, **kwargs)
+    return decorated_function
+
+def admin_required(f):
+    """Require user to be an admin."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return jsonify({"error": "Authentication required"}), 401
+        if not current_user.is_admin:
+            return jsonify({"error": "Admin privileges required"}), 403
+        return f(*args, **kwargs)
+    return decorated_function
