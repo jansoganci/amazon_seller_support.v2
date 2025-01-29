@@ -1,8 +1,8 @@
 """Category models."""
 
-from .category import Category, ASINKategori
+from .category import Category, ASINCategory
 
 __all__ = [
     'Category',
-    'ASINKategori'
+    'ASINCategory'
 ]
