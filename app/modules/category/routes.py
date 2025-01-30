@@ -4,7 +4,7 @@ from typing import Dict, Any
 from flask import Blueprint, jsonify, request, current_app
 from werkzeug.exceptions import BadRequest
 from app.modules.category.services.category_service import CategoryService
-from app.utils.decorators import login_required, admin_required
+from app.decorators import admin_required
 from app.utils.pagination import paginate_query
 from app.utils.validation import validate_request_data
 
@@ -24,7 +24,7 @@ def paginate_results(query, page=1, per_page=50):
     }
 
 @bp.route('/', methods=['GET'])
-@login_required
+@admin_required
 def get_categories():
     """Get category tree.
     
@@ -95,8 +95,8 @@ def create_category():
         current_app.logger.error(f"Error creating category: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
-@bp.route('/asin/<asin>', methods=['GET'])
-@login_required
+@bp.route('/asin/<string:asin>', methods=['GET'])
+@admin_required
 def get_asin_categories(asin: str):
     """Get categories for an ASIN.
     
@@ -215,8 +215,8 @@ def bulk_assign_categories():
         current_app.logger.error(f"Error in bulk assignment: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
-@bp.route('/uncategorized', methods=['GET'])
-@login_required
+@bp.route('/asin/uncategorized', methods=['GET'])
+@admin_required
 def get_uncategorized_asins():
     """Get ASINs without category assignments.
     

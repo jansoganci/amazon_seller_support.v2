@@ -161,6 +161,13 @@ interface FilterDefinition {
    - Implemented chart containers for metric visualization
    - Added filter controls for date, category, and ASIN selection
 
+5. **Category Management** 
+   - [x] Veritabanı modellerini oluştur
+   - [x] Admin yetkilendirmesini ekle
+   - [x] CLI komutlarını implement et
+   - [x] API endpoint'lerini oluştur
+   - [x] Frontend entegrasyonunu tamamla
+
 ### Current Issues
 1. **Template Rendering Issue**
    ```
@@ -309,18 +316,24 @@ interface FilterDefinition {
 ### Yapılacaklar
 
 1. **Kategori Yönetimi - MVP**
-   - [ ] Veritabanı modellerini oluştur
-   - [ ] Admin yetkilendirmesini ekle
-   - [ ] CLI komutlarını implement et
-   - [ ] API endpoint'lerini oluştur
-   - [ ] Frontend entegrasyonunu tamamla
+   - [x] Veritabanı modellerini oluştur
+   - [x] Admin yetkilendirmesini ekle
+   - [x] CLI komutlarını implement et
+   - [x] API endpoint'lerini oluştur
+   - [x] Frontend entegrasyonunu tamamla
 
 2. **Rapor Entegrasyonu**
-   - [ ] Business report template'ini güncelle
-   - [ ] Kategori filtrelerini ekle
-   - [ ] ASIN filtrelerini ekle
-   - [ ] JavaScript kodunu revize et
-   - [ ] Filtreleme mantığını test et
+   - [ ] Add category filters to all reports:
+     - Business Report
+     - Advertising Report
+     - Inventory Report
+     - Returns Report
+   - [ ] Category-based metrics
+   - [ ] Performance comparisons
+   - [ ] Filtering and grouping:
+     - Main category filtering
+     - Subcategory filtering
+     - ASIN filtering
 
 3. **Test ve Deploy**
    - [ ] Veritabanı migration'larını oluştur
@@ -331,9 +344,9 @@ interface FilterDefinition {
 
 ### Gelecek Geliştirmeler
 1. **Otomatik Kategori Atama**
-   - Amazon API entegrasyonu
-   - Kategori tahmin algoritması
-   - Bulk import desteği
+   - Bulk import/export sistemi
+   - CSV dosya desteği
+   - Toplu işlem raporlama
 
 2. **Admin Arayüzü**
    - Web tabanlı veri girişi

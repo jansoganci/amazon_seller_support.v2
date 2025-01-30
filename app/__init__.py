@@ -91,10 +91,6 @@ def create_app(config_object=None):
     from app.modules.uploaded_data.routes import bp as uploaded_data_bp
     app.register_blueprint(uploaded_data_bp)
 
-    # Register settings blueprint
-    from app.modules.settings.routes import bp as settings_bp
-    app.register_blueprint(settings_bp)
-
     # Register analytics blueprint
     from app.modules.analytics.routes import bp as analytics_bp
     app.register_blueprint(analytics_bp)
@@ -106,6 +102,14 @@ def create_app(config_object=None):
     # Register auth blueprint
     from app.modules.auth.routes import bp as auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
+
+    # Register admin blueprint
+    from app.modules.admin.routes import bp as admin_bp
+    app.register_blueprint(admin_bp)
+
+    # Register settings blueprint
+    from app.modules.settings.routes import bp as settings_bp
+    app.register_blueprint(settings_bp)
 
     return app
 

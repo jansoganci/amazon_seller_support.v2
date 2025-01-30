@@ -2,7 +2,7 @@
 <header class="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
   <div class="flex items-center justify-between px-4 py-3">
     <!-- Left side -->
-    <div class="flex items-center">
+    <div class="flex items-center space-x-4">
       <!-- Sidebar toggle -->
       <button id="sidebarToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -11,9 +11,31 @@
       </button>
       
       <!-- Logo/Title -->
-      <a href="{{ url_for('dashboard.index') }}" class="ml-4 text-xl font-semibold">
+      <a href="{{ url_for('dashboard.index') }}" class="text-xl font-semibold">
         Amazon Seller Support
       </a>
+
+      <!-- Admin Dropdown - Only visible to admins -->
+      {% if current_user.is_authenticated and current_user.role == 'admin' %}
+      <div x-data="{ open: false }" class="relative">
+        <button @click="open = !open" class="flex items-center px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white rounded-md">
+          Admin
+          <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+        <div x-show="open" @click.away="open = false" class="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5">
+          <div class="py-1">
+            <a href="{{ url_for('admin.category_management') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
+              Category Management
+            </a>
+            <a href="{{ url_for('admin.user_management') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
+              User Management
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endif %}
     </div>
 
     <!-- Right side -->
@@ -22,32 +44,33 @@
       <button id="themeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
         <!-- Sun icon -->
         <svg class="w-6 h-6 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z">
-          </path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
         </svg>
         <!-- Moon icon -->
         <svg class="w-6 h-6 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z">
-          </path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
         </svg>
       </button>
 
       <!-- User menu -->
       {% if current_user.is_authenticated %}
-      <div class="relative">
-        <button class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+      <div x-data="{ open: false }" class="relative">
+        <button @click="open = !open" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
           <span>{{ current_user.username }}</span>
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
           </svg>
         </button>
+        <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5">
+          <div class="py-1">
+            <a href="{{ url_for('settings.index') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">Settings</a>
+            <div class="border-t border-gray-100 dark:border-gray-600"></div>
+            <a href="{{ url_for('auth.logout') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">Logout</a>
+          </div>
+        </div>
       </div>
       {% else %}
-      <a href="{{ url_for('auth.login') }}" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-        Login
-      </a>
+      <a href="{{ url_for('auth.login') }}" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">Login</a>
       {% endif %}
     </div>
   </div>
@@ -66,4 +89,4 @@
       updateChartTheme(isDark);
     }
   });
-</script> 
+</script>

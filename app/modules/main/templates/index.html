@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Ana Sayfa{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Amazon Seller Support</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- CSV Upload Card -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4">CSV Yükleme</h2>
+            <p class="text-gray-600 mb-4">Business raporlarınızı CSV olarak yükleyin ve analiz edin.</p>
+            <a href="{{ url_for('csv.upload') }}" class="inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                CSV Yükle
+            </a>
+        </div>
+
+        {% if current_user.role == 'admin' %}
+        <!-- Category Management Card (Admin Only) -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4">Kategori Yönetimi</h2>
+            <p class="text-gray-600 mb-4">ASIN'leri kategorilere atayın ve yönetin.</p>
+            <a href="{{ url_for('admin.category_management') }}" class="inline-block bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                Kategorileri Yönet
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,133 @@
+{% extends "base_tailwind.html" %}
+
+{% block title %}Category Management{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Admin Check -->
+    {% if not current_user.is_admin %}
+        <div class="text-center">
+            <h1 class="text-2xl font-bold text-red-600">Access Denied</h1>
+            <p class="mt-2">You don't have permission to view this page.</p>
+        </div>
+    {% else %}
+        <!-- Admin Content -->
+        <div class="space-y-8">
+            <!-- Header -->
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold dark:text-white">Category Management</h1>
+                <div class="space-x-4">
+                    <button id="addRowBtn" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                        Add Row
+                    </button>
+                    <button id="saveBtn" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+
+            <!-- Excel-like Table -->
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full" id="categoryTable">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    ASIN
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Category
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Subcategory
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700" id="tableBody">
+                            <!-- JavaScript will add rows here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tableBody = document.getElementById('tableBody');
+        const addRowBtn = document.getElementById('addRowBtn');
+        const saveBtn = document.getElementById('saveBtn');
+
+        // Add new row
+        function addRow() {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <input type="text" class="w-full bg-transparent border-b border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none" placeholder="Enter ASIN">
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <input type="text" class="w-full bg-transparent border-b border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none" placeholder="Enter Category">
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <input type="text" class="w-full bg-transparent border-b border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none" placeholder="Enter Subcategory">
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <button onclick="deleteRow(this)" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                        Delete
+                    </button>
+                </td>
+            `;
+            tableBody.appendChild(tr);
+        }
+
+        // Delete row
+        window.deleteRow = function(button) {
+            button.closest('tr').remove();
+        }
+
+        // Add initial row
+        addRow();
+
+        // Add Row button click handler
+        addRowBtn.addEventListener('click', addRow);
+
+        // Save Changes button click handler
+        saveBtn.addEventListener('click', async function() {
+            const rows = Array.from(tableBody.getElementsByTagName('tr'));
+            const data = rows.map(row => {
+                const inputs = row.getElementsByTagName('input');
+                return {
+                    asin: inputs[0].value,
+                    category: inputs[1].value,
+                    subcategory: inputs[2].value
+                };
+            });
+
+            try {
+                const response = await fetch('/api/admin/categories/bulk-update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ categories: data })
+                });
+
+                if (response.ok) {
+                    alert('Categories saved successfully!');
+                } else {
+                    alert('Failed to save categories. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while saving categories');
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}
