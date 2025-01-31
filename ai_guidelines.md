@@ -1,4 +1,4 @@
-# Amazon Seller Support Assistant Prompt
+# Amazon Seller Support Assistant AI Guidelines
 
 ## Expertise Areas
 
@@ -104,6 +104,13 @@ All features will adhere to **global design and coding standards**, ensuring mai
 
 ```
 project/
+├── modül/                # Her bir özellik için ayrı modüller
+│   ├── raporlar/         # Analiz ve CSV işlemleri
+│   ├── auth/             # Kimlik doğrulama mantığı
+│   └── dashboard/        # Dashboard bileşenleri
+├── core/                 # Temel şablonlar ve yardımcı fonksiyonlar
+│   ├── base_analytics.py # Tüm raporların türeyeceği temel sınıf
+│   └── templates/        # Jinja2 template inheritance için base.html
 ├── app.py
 ├── templates/
 ├── static/
@@ -125,6 +132,44 @@ project/
 - Responsive layouts
 - Semantic HTML
 - BEM methodology for CSS
+
+## Modüler Proje Yapısı
+
+### Proje Yapısı (Güncellendi)
+
+```
+project/
+├── modül/                # Her bir özellik için ayrı modüller
+│   ├── raporlar/         # Analiz ve CSV işlemleri
+│   ├── auth/             # Kimlik doğrulama mantığı
+│   └── dashboard/        # Dashboard bileşenleri
+├── core/                 # Temel şablonlar ve yardımcı fonksiyonlar
+│   ├── base_analytics.py # Tüm raporların türeyeceği temel sınıf
+│   └── templates/        # Jinja2 template inheritance için base.html
+├── app.py
+├── templates/
+├── static/
+├── uploads/
+├── models.py
+├── requirements.txt
+└── README.md
+```
+
+### Örnek Rapor Sınıfı
+
+```python
+# modül/raporlar/sales_report.py
+from core.base_analytics import BaseReport
+
+class SalesReport(BaseReport):
+    def generate_summary(self):
+        """Satış raporu için özet oluşturur"""
+        return self.data.groupby('product').sum()
+
+    def generate_detailed_report(self):
+        """Detaylı satış raporu oluşturur"""
+        return self.data.describe()
+```
 
 ## Mentorship Approach
 
@@ -169,4 +214,128 @@ project/
 2. Include code examples with comments
 3. Maintain supportive mentorship tone
 
-Your role is to guide the user through development while maintaining high coding standards and best practices.
+---
+
+## Otomatik Dokümantasyon
+
+- **Sphinx veya MkDocs** ile API ve modül dokümantasyonu oluşturun.
+- Kurulum Adımları:
+  ```bash
+  pip install sphinx mkdocs
+  sphinx-quickstart
+  mkdocs new .
+  ```
+- Dokümantasyonu Otomatik Oluşturma:
+  ```yaml
+  # .github/workflows/docs.yml
+  name: Generate Docs
+  on: [push]
+  jobs:
+    build:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v2
+        - run: pip install sphinx mkdocs
+        - run: sphinx-build -b html docs/ build/docs
+        - run: mkdocs build
+  ```
+
+## Kullanıcı Analitiği
+
+- **Frontend'e GA Kodu Ekleme** (Tüm sayfalarda çalışması için `base.html`'e ekleyin):
+  ```html
+  <!-- templates/base.html -->
+  <head>
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'GA_MEASUREMENT_ID');
+    </script>
+  </head>
+  ```
+
+- **GA_MEASUREMENT_ID Yapılandırma Rehberi**:
+  1. [Google Analytics](https://analytics.google.com/) hesabınıza giriş yapın.
+  2. Yeni bir property oluşturun ve `GA_MEASUREMENT_ID`'yi alın.
+  3. `GA_MEASUREMENT_ID`'yi projenizin environment variables'ına ekleyin:
+     ```bash
+     export GA_MEASUREMENT_ID='YOUR_MEASUREMENT_ID'
+     ```
+  4. `base.html` dosyasında `GA_MEASUREMENT_ID`'yi kullanın.
+
+## Dağıtım ve DevOps (Güncellendi)
+
+- **Dockerfile Örneği** (MVP sonrası için hazırlık):
+  ```dockerfile
+  FROM python:3.9-slim
+  WORKDIR /app
+  COPY requirements.txt .
+  RUN pip install --no-cache-dir -r requirements.txt
+  COPY . .
+  CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+  ```
+
+## Performans İyileştirmeleri (Güncellendi)
+
+- **Önbellekleme Mekanizması** (Sık kullanılan raporlar için):
+  ```python
+  # modül/raporlar/cache.py
+  from flask_caching import Cache
+  cache = Cache(config={'CACHE_TYPE': 'SimpleCache'})
+  ```
+
+- **CSV İşleme Optimizasyonu** (Pandas ile):
+  ```python
+  # modül/raporlar/base_analytics.py
+  import pandas as pd
+  def process_large_csv(file_path):
+      return pd.read_csv(file_path, chunksize=5000)  # Memory-friendly
+  ```
+
+## Backend Geliştirme (Güncellendi)
+
+- **Temel Rapor Sınıfı** (Tüm rapor modülleri buradan türetilmeli):
+  ```python
+  # core/base_analytics.py
+  class BaseReport:
+      def __init__(self, csv_data):
+          self.data = csv_data
+      
+      def generate_summary(self):
+          """Tüm raporlarda ortak olan özet mantığı"""
+          raise NotImplementedError("Alt sınıflar bu metodu implement etmeli!")
+  ```
+
+## İleriye Dönük Planlama
+
+- **Hata Takip Sistemi** (Sentry ile entegrasyon):
+  ```python
+  # app.py
+  import sentry_sdk
+  sentry_sdk.init("DSN_BURAYA", traces_sample_rate=1.0)
+  ```
+
+- **CI/CD Pipeline** (GitHub Actions örneği):
+  ```yaml
+  # .github/workflows/main.yml
+  name: CI/CD Pipeline
+  on: [push]
+  jobs:
+    test:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v2
+        - run: pip install -r requirements.txt
+        - run: pytest
+  ```
+
+- **Kullanıcı Davranışı İzleme** (Frontend'de custom event'ler):
+  ```javascript
+  // static/js/analytics.js
+  document.getElementById('download-report').addEventListener('click', () => {
+    gtag('event', 'report_download', { 'event_category': 'engagement' });
+  });
+  ```
