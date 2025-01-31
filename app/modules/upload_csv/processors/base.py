@@ -5,15 +5,19 @@ from typing import Dict, List, Optional, Tuple, Any, Generator
 import pandas as pd
 from werkzeug.datastructures import FileStorage
 from flask import current_app
+from flask_login import current_user
 import os
 import logging
-from datetime import datetime
+from datetime import datetime, UTC
 import csv
+import shutil
 
 from app import db
-from app.models.store import Store
+from app.modules.stores.models import Store
 from ..validators.base import BaseCSVValidator
 from ..constants import CSV_COLUMNS, ERROR_MESSAGES
+from ..models.csv_file import CSVFile
+from ..models.upload_history import UploadHistory
 from ..utils import (
     validate_file_size,
     validate_file_type,
@@ -58,148 +62,162 @@ class BaseCSVProcessor(ABC):
         self.report_type = report_type
         self.validator = BaseCSVValidator()
         self.processing_status = ProcessingStatus()
+        self.csv_file = None
+        self.upload_history = None
         
     def process_file(self, file: FileStorage, user_id: int) -> Tuple[bool, str]:
-        """Process the uploaded CSV file."""
+        """Process the uploaded CSV file.
+        
+        Args:
+            file: The uploaded file
+            user_id: ID of the user uploading the file
+            
+        Returns:
+            Tuple[bool, str]: (success status, error message)
+        """
         try:
-            # Reset processing status
-            self.processing_status = ProcessingStatus()
-            self.processing_status.status = "processing"
+            # Create upload directories
+            processed_path, temp_path = create_upload_folders()
             
-            # Debug: Dosya içeriğini kontrol et
-            content = file.read().decode('utf-8')
-            print(f"File content:\n{content[:1000]}")  # İlk 1000 karakteri göster
-            file.seek(0)  # Dosya pointer'ı başa al
-            
-            # Step 1: Validate file size and type
-            is_valid, error_msg = validate_file_size(file)
-            if not is_valid:
-                return self._handle_error(error_msg)
-            file.seek(0)  # Pointer'ı tekrar başa al
-                
-            is_valid, error_msg = validate_file_type(file)
-            if not is_valid:
-                return self._handle_error(error_msg)
-            file.seek(0)  # Pointer'ı tekrar başa al
-            
-            # Step 2: Create necessary folders
-            try:
-                upload_path, temp_path = create_upload_folders(user_id, self.report_type)
-            except FileValidationError as e:
-                return self._handle_error(str(e))
-            
-            # Step 3: Save file with safe name
+            # Generate safe filename
             safe_filename = generate_safe_filename(file.filename, user_id)
             temp_file_path = os.path.join(temp_path, safe_filename)
             
-            # Dosyayı string olarak kaydet
-            with open(temp_file_path, 'w', encoding='utf-8') as f:
-                f.write(content)
+            # Save file temporarily
+            file.save(temp_file_path)
             
-            # Debug: Kaydedilen dosyayı kontrol et
-            with open(temp_file_path, 'r', encoding='utf-8') as f:
-                saved_content = f.read()
-                print(f"Saved file content:\n{saved_content[:1000]}")
-            
-            # Step 4: Process file in chunks
-            success = True
-            message = ""
-            try:
-                # Process in chunks
-                for success, message in self._process_chunks(temp_file_path, user_id):
-                    if not success:
-                        break
-                
-                if success:
-                    # Move file to final location if processing successful
-                    final_path = os.path.join(upload_path, safe_filename)
-                    os.rename(temp_file_path, final_path)
-                    return True, "File processed successfully"
-                else:
-                    return False, message
-                    
-            finally:
-                # Clean up temp file
-                cleanup_temp_files(temp_file_path)
-                
-        except Exception as e:
-            return self._handle_error(f"Error processing file: {str(e)}")
-            
-    def _process_chunks(self, file_path: str, user_id: int) -> Generator[Tuple[bool, str], None, None]:
-        """Process CSV file in chunks."""
-        try:
-            # Debug: Dosya var mı kontrol et
-            if not os.path.exists(file_path):
-                logger.error(f"File does not exist: {file_path}")
-                yield False, "File does not exist"
-                return
-
-            # Debug: Dosya boyutunu kontrol et
-            file_size = os.path.getsize(file_path)
+            # Get file size and debug info
+            file_size = os.path.getsize(temp_file_path)
             logger.info(f"File size: {file_size} bytes")
-            if file_size == 0:
-                logger.error("File is empty")
-                yield False, "File is empty"
-                return
-
-            # Debug: Dosya içeriğini kontrol et
-            with open(file_path, 'rb') as f:
-                content = f.read()
-                logger.info(f"Raw file content (first 200 bytes): {content[:200]}")
-
-            # Önce dosyanın encoding'ini tespit et
-            encoding = self._detect_file_encoding(file_path)
-            logger.info(f"Detected file encoding: {encoding}")
             
-            # Debug: Dosyayı text olarak oku
-            with open(file_path, 'r', encoding=encoding) as f:
-                first_lines = [next(f) for _ in range(2)]
-                logger.info(f"First two lines:\n1: {first_lines[0].strip()}\n2: {first_lines[1].strip() if len(first_lines) > 1 else 'No second line'}")
+            with open(temp_file_path, 'rb') as f:
+                content_preview = f.read(200)
+            logger.info(f"Raw file content (first 200 bytes): {content_preview}")
             
-            # CSV dosyasını oku - özel parametrelerle
-            try:
-                logger.info("Attempting to read CSV with pandas...")
-                df = pd.read_csv(file_path, encoding=encoding)
-                logger.info(f"Successfully read CSV. Shape: {df.shape}, Columns: {df.columns.tolist()}")
-                
-                # DataFrame'i chunk'lara böl
-                chunk_size = CHUNK_SIZE
-                num_chunks = (len(df) + chunk_size - 1) // chunk_size
-                
-                for i in range(num_chunks):
-                    start_idx = i * chunk_size
-                    end_idx = min((i + 1) * chunk_size, len(df))
-                    chunk = df.iloc[start_idx:end_idx]
-                    
-                    logger.info(f"Processing chunk {i+1}/{num_chunks} with {len(chunk)} rows")
-                    self.processing_status.current_chunk = i + 1
-                    
-                    # Validate chunk
-                    success, errors = self.validate_data(chunk)
-                    if not success:
-                        yield False, "\n".join(errors)
-                        return
+            # Get processed path
+            processed_file_path = os.path.join(processed_path, safe_filename)
+            
+            # Detect encoding
+            encoding = self._detect_file_encoding(temp_file_path)
+            
+            # First validate if store_id column exists
+            df_check = pd.read_csv(temp_file_path, encoding=encoding, nrows=1)
+            if 'store_id' not in df_check.columns:
+                cleanup_temp_files(temp_file_path)
+                return False, "CSV file must contain 'store_id' column"
+            
+            # Get first store_id from CSV for the file record
+            first_store_id = int(df_check['store_id'].iloc[0])
+            
+            # Validate access to first store
+            access_valid, error_msg = self.validate_store_access(first_store_id, user_id)
+            if not access_valid:
+                cleanup_temp_files(temp_file_path)
+                return False, error_msg
+            
+            # Create CSV file record
+            csv_file = CSVFile(
+                filename=safe_filename,
+                file_type=self.report_type,
+                file_size=file_size,
+                file_path=processed_file_path,
+                user_id=user_id,
+                store_id=first_store_id
+            )
+            db.session.add(csv_file)
+            db.session.flush()
+            
+            # Create upload history record
+            upload_history = UploadHistory(
+                csv_file_id=csv_file.id,
+                status='processing',
+                started_at=datetime.now(UTC)
+            )
+            db.session.add(upload_history)
+            db.session.commit()
+            
+            self.csv_file = csv_file
+            self.upload_history = upload_history
+            
+            # Process file in chunks
+            chunk_iterator = pd.read_csv(
+                temp_file_path,
+                encoding=encoding,
+                chunksize=CHUNK_SIZE,
+                on_bad_lines='warn'
+            )
+            
+            total_rows = 0
+            for chunk_idx, chunk in enumerate(chunk_iterator, 1):
+                # Validate store access for each unique store in chunk
+                chunk_store_ids = chunk['store_id'].unique()
+                for store_id in chunk_store_ids:
+                    access_valid, error_msg = self.validate_store_access(int(store_id), user_id)
+                    if not access_valid:
+                        # Update history with error
+                        upload_history.status = 'failed'
+                        upload_history.error_message = error_msg
+                        upload_history.completed_at = datetime.now(UTC)
+                        db.session.commit()
                         
-                    # Save chunk
-                    success, message = self.save_data(chunk, user_id)
-                    if not success:
-                        yield False, message
-                        return
+                        cleanup_temp_files(temp_file_path)
+                        return False, error_msg
+                
+                # Update processing status
+                self.processing_status.current_chunk = chunk_idx
+                if chunk_idx == 1:
+                    total_rows = len(chunk)
+                
+                # Save chunk data
+                try:
+                    self.save_data(chunk, user_id)
+                    total_rows += len(chunk)
+                    
+                    # Update upload history progress
+                    if self.upload_history:
+                        self.upload_history.rows_processed = total_rows
+                        db.session.commit()
                         
-                    self.processing_status.processed_rows += len(chunk)
-                    yield True, f"Processed {self.processing_status.processed_rows} rows"
-                
-            except pd.errors.EmptyDataError:
-                logger.error("CSV file is empty")
-                yield False, "CSV file is empty"
-            except Exception as e:
-                logger.error(f"Error reading CSV with pandas: {str(e)}")
-                yield False, f"Error reading CSV file: {str(e)}"
-                
+                except Exception as e:
+                    error_msg = f"Error saving chunk {chunk_idx}: {str(e)}"
+                    logger.exception(error_msg)
+                    
+                    # Update history with error
+                    upload_history.status = 'failed'
+                    upload_history.error_message = error_msg
+                    upload_history.completed_at = datetime.now(UTC)
+                    db.session.commit()
+                    
+                    cleanup_temp_files(temp_file_path)
+                    return False, error_msg
+            
+            # Move file to processed directory
+            shutil.move(temp_file_path, processed_file_path)
+            
+            # Update history
+            upload_history.status = 'completed'
+            upload_history.completed_at = datetime.now(UTC)
+            upload_history.rows_processed = total_rows
+            db.session.commit()
+            
+            return True, "File processed successfully"
+            
         except Exception as e:
-            logger.error(f"Error processing file: {str(e)}")
-            yield False, f"Error processing file: {str(e)}"
+            error_msg = f"Error processing file: {str(e)}"
+            logger.exception(error_msg)
             
+            if self.upload_history:
+                self.upload_history.status = 'failed'
+                self.upload_history.error_message = error_msg
+                self.upload_history.completed_at = datetime.now(UTC)
+                db.session.commit()
+            
+            # Clean up temp file if it exists
+            if 'temp_file_path' in locals():
+                cleanup_temp_files(temp_file_path)
+            
+            return False, error_msg
+
     def _detect_file_encoding(self, file_path: str) -> str:
         """
         Dosyanın encoding'ini tespit et ve gerekirse dönüştür.
@@ -210,69 +228,49 @@ class BaseCSVProcessor(ABC):
         Returns:
             str: Tespit edilen encoding
         """
-        import chardet
+        encodings = ['utf-8', 'latin1', 'cp1252']
         
-        # Önce dosyanın encoding'ini tespit et
-        with open(file_path, 'rb') as file:
-            raw_data = file.read()
-            result = chardet.detect(raw_data)
-            detected_encoding = result['encoding']
-            
-        logger.info(f"Detected encoding: {detected_encoding}")
-        
-        # Eğer UTF-8 değilse, dosyayı UTF-8'e dönüştür
-        if detected_encoding and detected_encoding.lower() != 'utf-8':
+        for encoding in encodings:
             try:
-                # Orijinal içeriği oku
-                with open(file_path, 'r', encoding=detected_encoding) as file:
-                    content = file.read()
-                    
-                # UTF-8 olarak kaydet
-                with open(file_path, 'w', encoding='utf-8') as file:
-                    file.write(content)
-                    
-                logger.info(f"Converted file from {detected_encoding} to UTF-8")
-                return 'utf-8'
-            except Exception as e:
-                logger.warning(f"Error converting encoding: {str(e)}")
-                # Hata durumunda orijinal encoding'i kullan
-                return detected_encoding or 'utf-8'
+                with open(file_path, 'r', encoding=encoding) as f:
+                    f.read()
+                return encoding
+            except UnicodeDecodeError:
+                continue
+                
+        return 'utf-8'  # Default to UTF-8 if no encoding works
         
-        return detected_encoding or 'utf-8'
-            
     def _handle_error(self, error_msg: str) -> Tuple[bool, str]:
         """Handle processing error."""
         self.processing_status.status = "failed"
         self.processing_status.errors.append(error_msg)
-        logger.error(f"Processing error: {error_msg}")
+        logger.error(error_msg)
         return False, error_msg
         
     def get_processing_status(self) -> Dict[str, Any]:
         """Get current processing status."""
         return self.processing_status.to_dict()
+        
+    def validate_store_access(self, store_id: int, user_id: int) -> Tuple[bool, str]:
+        """Validate user has access to store.
+        
+        Args:
+            store_id: Store ID to validate access for
+            user_id: User ID to validate access for
+            
+        Returns:
+            Tuple[bool, str]: (success status, error message)
+        """
+        if not store_id:
+            return False, "Store ID is required"
 
-    def validate_store_access(self, df: pd.DataFrame, user_id: int) -> Tuple[bool, str]:
-        """Validate that the user has access to the stores in the CSV."""
-        try:
-            if 'store_id' not in df.columns:
-                return False, "CSV file does not contain store_id column"
-                
-            store_ids = df['store_id'].unique()
-            user_stores = Store.query.filter(
-                Store.id.in_(store_ids),
-                Store.user_id == user_id
-            ).all()
-            
-            if len(user_stores) != len(store_ids):
-                return False, "User does not have access to all stores in the CSV"
-                
-            return True, ""
-            
-        except Exception as e:
-            logger.error(f"Error validating store access: {str(e)}")
-            return False, f"Error validating store access: {str(e)}"
+        store = Store.query.filter_by(id=store_id, user_id=user_id).first()
+        if not store:
+            return False, f"You don't have access to store: {store_id}"
+
+        return True, ""
 
     @abstractmethod
-    def save_data(self, df: pd.DataFrame, user_id: int) -> Tuple[bool, str]:
+    def save_data(self, df: pd.DataFrame, user_id: int) -> None:
         """Save the processed data to the database."""
         pass

@@ -1,13 +1,13 @@
 """Business routes."""
 
 from datetime import datetime, timedelta
+from typing import Optional
 from flask import Blueprint, jsonify, request, render_template, flash, redirect, url_for, current_app, send_file
 from flask_login import login_required, current_user
-from app.utils.analytics_engine import AnalyticsEngine
-from app.models.store import Store
+from app.modules.stores.models import Store
 from app.modules.business.models import BusinessReport
 from app.utils.decorators import store_required
-from app.modules.business.services import BusinessReportService
+from app.modules.business.services import BusinessReportService, BusinessAnalytics
 import logging
 
 bp = Blueprint('business', __name__, 
@@ -18,8 +18,8 @@ logger.setLevel(logging.DEBUG)
 
 # Business metrics configuration
 BUSINESS_METRICS = {
-    'ordered_product_sales': {
-        'name': 'Total Sales',
+    'total_revenue': {
+        'name': 'Total Revenue',
         'category': 'sales',
         'visualization': {
             'format': '${:,.2f}',
@@ -28,7 +28,7 @@ BUSINESS_METRICS = {
             'color': 'green'
         }
     },
-    'total_order_items': {
+    'total_orders': {
         'name': 'Total Orders',
         'category': 'sales',
         'visualization': {
@@ -38,13 +38,13 @@ BUSINESS_METRICS = {
             'color': 'blue'
         }
     },
-    'sessions': {
-        'name': 'Sessions',
-        'category': 'traffic',
+    'total_units': {
+        'name': 'Total Units',
+        'category': 'sales',
         'visualization': {
             'format': '{:,}',
-            'icon': 'users',
-            'chartType': 'line',
+            'icon': 'box',
+            'chartType': 'bar',
             'color': 'purple'
         }
     },
@@ -57,6 +57,16 @@ BUSINESS_METRICS = {
             'chartType': 'line',
             'color': 'orange'
         }
+    },
+    'average_order_value': {
+        'name': 'Average Order Value',
+        'category': 'performance',
+        'visualization': {
+            'format': '${:.2f}',
+            'icon': 'trending-up',
+            'chartType': 'line',
+            'color': 'teal'
+        }
     }
 }
 
@@ -66,6 +76,174 @@ BUSINESS_METRICS = {
 def index():
     """Business report index page."""
     return render_template('business/index.html')
+
+@bp.route('/api/trends')
+@login_required
+@store_required
+def get_trends():
+    """Get business trend data.
+    
+    This endpoint provides trend analysis for business metrics over a specified time period.
+    Supports optional category filtering and configurable time ranges.
+    
+    Query Parameters:
+        days (int): Number of days to analyze (default: 30, max: 365)
+        category_id (int, optional): Category ID to filter by
+        
+    Returns:
+        JSON response containing:
+        - success (bool): Indicates if request was successful
+        - data (dict): Contains trend data if successful
+        - metrics (dict): Contains metric configurations
+        - error (str): Error message if unsuccessful
+        
+    Status Codes:
+        200: Success
+        400: Invalid parameters
+        403: Unauthorized store access
+        500: Internal server error
+    """
+    try:
+        # Get date range
+        end_date = datetime.now()
+        days = request.args.get('days', type=int, default=30)
+        
+        # Validate days parameter
+        if days <= 0 or days > 365:
+            logger.warning(f"Invalid days parameter: {days}")
+            return jsonify({
+                'success': False,
+                'error': 'Days parameter must be between 1 and 365'
+            }), 400
+            
+        start_date = end_date - timedelta(days=days)
+        
+        # Get optional filters
+        category_id: Optional[int] = request.args.get('category_id', type=int)
+            
+        # Authorization check
+        if not current_user.has_store_access(current_user.store_id):
+            logger.warning(
+                f"User {current_user.id} attempted unauthorized access to store {current_user.store_id}"
+            )
+            return jsonify({
+                'success': False,
+                'error': 'Unauthorized store access'
+            }), 403
+            
+        # Get trends using analytics service
+        service = BusinessReportService(current_user.store_id)
+        trends = service.get_trends(
+            start_date=start_date,
+            end_date=end_date,
+            category_id=category_id
+        )
+        
+        logger.info(
+            f"Retrieved trends for store {current_user.store_id} "
+            f"from {start_date} to {end_date}"
+        )
+        
+        return jsonify({
+            'success': True,
+            'data': trends,
+            'metrics': BUSINESS_METRICS
+        })
+        
+    except ValueError as e:
+        logger.warning(f"Invalid parameter in trends request: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
+        
+    except Exception as e:
+        logger.exception("Error retrieving trend data")
+        return jsonify({
+            'success': False,
+            'error': 'An internal error occurred'
+        }), 500
+
+@bp.route('/api/categories/comparison')
+@login_required
+@store_required
+def compare_categories():
+    """Compare performance across categories."""
+    try:
+        # Get parameters
+        end_date = datetime.now()
+        days = int(request.args.get('days', 30))
+        start_date = end_date - timedelta(days=days)
+        category_ids = request.args.getlist('category_ids[]', type=int)
+        
+        if not category_ids:
+            return jsonify({
+                'success': False,
+                'error': 'No categories specified'
+            }), 400
+            
+        # Get comparison using analytics service
+        service = BusinessReportService(current_user.store_id)
+        comparison = service.get_category_comparison(
+            start_date,
+            end_date,
+            category_ids
+        )
+        
+        return jsonify({
+            'success': True,
+            'data': comparison,
+            'metrics': BUSINESS_METRICS
+        })
+        
+    except Exception as e:
+        logger.exception("Error comparing categories")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@bp.route('/api/categories')
+@login_required
+@store_required
+def get_categories():
+    """Get available categories."""
+    try:
+        service = BusinessReportService(current_user.store_id)
+        categories = service.get_categories()
+        
+        return jsonify({
+            'success': True,
+            'data': categories
+        })
+        
+    except Exception as e:
+        logger.exception("Error getting categories")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@bp.route('/api/asins')
+@login_required
+@store_required
+def get_asins():
+    """Get available ASINs."""
+    try:
+        service = BusinessReportService(current_user.store_id)
+        asins = service.get_asins()
+        
+        return jsonify({
+            'success': True,
+            'data': asins
+        })
+        
+    except Exception as e:
+        logger.exception("Error getting ASINs")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 @bp.route('/upload', methods=['POST'])
 @login_required
@@ -215,7 +393,7 @@ def stats():
 @store_required
 def revenue_trends():
     """Revenue trends page."""
-    analytics = AnalyticsEngine()
+    analytics = BusinessAnalytics()
     store_id = 1  # TODO: Get from current user's store
     
     try:
@@ -396,48 +574,6 @@ def get_chart_data(period):
         return jsonify(data)
     except Exception as e:
         return jsonify({'error': str(e)}), 400
-
-@bp.route('/api/trends')
-@login_required
-@store_required
-def get_trends():
-    """API endpoint to get business trend data."""
-    try:
-        # Get and validate parameters
-        store_id = current_user.active_store_id
-        start_date = request.args.get('startDate', type=str)
-        end_date = request.args.get('endDate', type=str)
-        group_by = request.args.get('groupBy', 'daily')
-        category = request.args.get('category')
-        asin = request.args.get('asin')
-        
-        if not all([start_date, end_date]):
-            return jsonify({'error': 'Missing required parameters'}), 400
-            
-        if not current_user.has_store_access(store_id):
-            return jsonify({'error': 'No access to this store'}), 403
-            
-        try:
-            start_date = datetime.strptime(start_date, '%Y-%m-%d')
-            end_date = datetime.strptime(end_date, '%Y-%m-%d')
-        except ValueError:
-            return jsonify({'error': 'Invalid date format'}), 400
-            
-        # Get trend data
-        service = BusinessReportService(store_id)
-        trend_data = service.get_trends(
-            start_date=start_date,
-            end_date=end_date,
-            category=category,
-            asin=asin,
-            group_by=group_by
-        )
-        
-        return jsonify(trend_data)
-        
-    except Exception as e:
-        logger.error(f"Error getting trend data: {str(e)}")
-        return jsonify({'error': 'An error occurred while fetching trend data'}), 500
 
 @bp.route('/data')
 @login_required

@@ -2,9 +2,9 @@
 
 from flask import Blueprint, jsonify, request, current_app, render_template
 from flask_login import login_required, current_user
-from app.models.user import User
-from app.models.store import Store
-from app.modules.upload_csv import CSVFile
+from app.modules.auth.models import User
+from app.modules.stores.models import Store
+from app.modules.upload_csv import CSVFileData
 import logging
 
 logger = logging.getLogger(__name__)

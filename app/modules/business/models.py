@@ -1,29 +1,50 @@
 """Business report models."""
-
 from datetime import datetime
+from typing import Optional
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.extensions import db
 
 class BusinessReport(db.Model):
-    """Business report model."""
+    """Business report model for storing Amazon seller business data."""
     __tablename__ = 'business_reports'
 
-    id = db.Column(db.Integer, primary_key=True)
-    store_id = db.Column(db.Integer, db.ForeignKey('stores.id'), nullable=False)
-    date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    category = db.Column(db.String(100), nullable=False)
-    asin = db.Column(db.String(10), nullable=False)
-    product_name = db.Column(db.String(255), nullable=False)
-    units_sold = db.Column(db.Integer, default=0)
-    revenue = db.Column(db.Numeric(10, 2), default=0)
-    views = db.Column(db.Integer, default=0)
-    sessions = db.Column(db.Integer, default=0)
-    conversion_rate = db.Column(db.Numeric(5, 2), default=0)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
+    store_id: Mapped[int] = mapped_column(db.Integer, db.ForeignKey('stores.id'), nullable=False)
+    date: Mapped[datetime] = mapped_column(db.DateTime, nullable=False)
+    sku: Mapped[str] = mapped_column(db.String(50), nullable=False)
+    asin: Mapped[str] = mapped_column(db.String(20), nullable=False)
+    title: Mapped[str] = mapped_column(db.String(255), nullable=False)
+    sessions: Mapped[int] = mapped_column(db.Integer, default=0)
+    units_ordered: Mapped[int] = mapped_column(db.Integer, default=0)
+    ordered_product_sales: Mapped[float] = mapped_column(db.Numeric(10, 2), default=0)
+    total_order_items: Mapped[int] = mapped_column(db.Integer, default=0)
+    conversion_rate: Mapped[float] = mapped_column(db.Numeric(5, 2), default=0)
+    
+    # Metadata
+    created_at: Mapped[datetime] = mapped_column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
-    store = db.relationship('Store', backref=db.backref('business_reports', lazy=True))
+    store: Mapped["Store"] = relationship("Store", back_populates="business_reports")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """String representation."""
-        return f'<BusinessReport {self.id} - Store {self.store_id} - {self.date}>'
+        return f'<BusinessReport {self.id} - Store {self.store_id} - {self.date} - {self.sku}>'
+
+    def to_dict(self) -> dict:
+        """Convert to dictionary."""
+        return {
+            'id': self.id,
+            'store_id': self.store_id,
+            'date': self.date.isoformat(),
+            'sku': self.sku,
+            'asin': self.asin,
+            'title': self.title,
+            'sessions': self.sessions,
+            'units_ordered': self.units_ordered,
+            'ordered_product_sales': float(self.ordered_product_sales),
+            'total_order_items': self.total_order_items,
+            'conversion_rate': float(self.conversion_rate),
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat()
+        }

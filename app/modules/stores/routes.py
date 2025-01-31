@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from app import db
-from app.models.store import Store
+from app.modules.stores.models import Store
 from . import bp
 
 @bp.route('/')

@@ -4,6 +4,27 @@ Constants for CSV processing and validation.
 
 from decimal import Decimal
 
+# Error Messages
+ERROR_MESSAGES = {
+    'file_not_found': 'File not found. Please select a valid CSV file.',
+    'invalid_file_type': 'Invalid file type. Only CSV files are allowed.',
+    'file_too_large': 'File size exceeds the maximum allowed limit.',
+    'missing_columns': 'Required columns are missing in the CSV file.',
+    'invalid_data': 'The CSV file contains invalid data.',
+    'store_not_found': 'Store not found or access denied.',
+    'processing_failed': 'Failed to process the CSV file.',
+    'server_error': 'An unexpected error occurred while processing the file.',
+    'empty_file': 'The CSV file is empty. Please upload a file with data.',
+    'encoding_error': 'Unable to read the file encoding. Please ensure the file is properly encoded.',
+    'validation_error': 'Data validation failed. Please check the file format and contents.',
+    'permission_denied': 'You do not have permission to upload files for this store.',
+    'duplicate_file': 'This file has already been uploaded.',
+    'corrupted_file': 'The file appears to be corrupted or invalid.',
+    'boolean_error': 'Invalid boolean value in column: {}. Use True/False or 1/0',
+    'date_error': 'Invalid date format in column: {}. Use YYYY-MM-DD format',
+    'duplicate_data': 'Duplicate entries detected for store_id: {} on date: {}'
+} 
+
 # CSV Column Definitions
 CSV_COLUMNS = {
     'business_report': {
@@ -82,16 +103,3 @@ CSV_COLUMNS = {
         'date': ['return_date']
     }
 }
-
-# Error Messages
-ERROR_MESSAGES = {
-    'file_required': 'No file was uploaded',
-    'invalid_file_type': 'Invalid file type. Please upload a CSV file',
-    'decode_error': 'Unable to decode CSV file. Please ensure it is properly encoded',
-    'missing_columns': 'Missing required columns: {}',
-    'invalid_data': 'Invalid data in column: {}',
-    'store_not_found': 'Store not found or access denied: {}',
-    'duplicate_data': 'Duplicate entries detected for store_id: {} on date: {}',
-    'boolean_error': 'Invalid boolean value in column: {}. Use True/False or 1/0',
-    'date_error': 'Invalid date format in column: {}. Use YYYY-MM-DD format'
-} 

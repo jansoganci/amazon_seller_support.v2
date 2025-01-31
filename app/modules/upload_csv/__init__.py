@@ -8,8 +8,8 @@ bp = Blueprint('upload_csv', __name__,
                template_folder='templates')
 
 @dataclass
-class CSVFile:
-    """CSV file data class."""
+class CSVFileData:
+    """CSV file data class for file uploads."""
     filename: str
     content: bytes
     mimetype: str
@@ -19,4 +19,4 @@ def init_app(app):
     from . import routes  # Import routes here to avoid circular imports
     app.register_blueprint(bp)
 
-__all__ = ['bp', 'init_app', 'CSVFile']
+__all__ = ['bp', 'init_app', 'CSVFileData']

@@ -12,7 +12,6 @@ import calendar
 import pandas as pd
 
 from sqlalchemy import func, extract, and_, text
-from app.modules.business.models import BusinessReport
 from app.utils.data_validator import DataValidator
 from app.extensions import db
 
@@ -31,6 +30,9 @@ class AnalyticsEngine:
         """Initialize the analytics engine."""
         self.cache = {}  # Simple in-memory cache
         self.validator = DataValidator()
+        # Lazy import to avoid circular dependency
+        from app.modules.business.models import BusinessReport
+        self.BusinessReport = BusinessReport
 
     def get_revenue_trends(
         self,
@@ -597,13 +599,13 @@ class AnalyticsEngine:
             # Get period data
             period_data = (
                 db.session.query(
-                    func.sum(BusinessReport.units_sold).label('total_units'),
-                    func.sum(BusinessReport.revenue).label('total_revenue'),
-                    func.avg(BusinessReport.conversion_rate).label('avg_conversion')
+                    func.sum(self.BusinessReport.units_sold).label('total_units'),
+                    func.sum(self.BusinessReport.revenue).label('total_revenue'),
+                    func.avg(self.BusinessReport.conversion_rate).label('avg_conversion')
                 )
                 .filter(
-                    BusinessReport.store_id == store_id,
-                    BusinessReport.created_at.between(start_date, end_date)
+                    self.BusinessReport.store_id == store_id,
+                    self.BusinessReport.created_at.between(start_date, end_date)
                 )
                 .first()
             )
@@ -623,12 +625,12 @@ class AnalyticsEngine:
 
             comparison_data = (
                 db.session.query(
-                    func.sum(BusinessReport.units_sold).label('total_units'),
-                    func.sum(BusinessReport.revenue).label('total_revenue')
+                    func.sum(self.BusinessReport.units_sold).label('total_units'),
+                    func.sum(self.BusinessReport.revenue).label('total_revenue')
                 )
                 .filter(
-                    BusinessReport.store_id == store_id,
-                    BusinessReport.created_at.between(comparison_start, comparison_end)
+                    self.BusinessReport.store_id == store_id,
+                    self.BusinessReport.created_at.between(comparison_start, comparison_end)
                 )
                 .first()
             )
@@ -744,14 +746,14 @@ class AnalyticsEngine:
         weekly_data = (
             db.session.query(
                 # Use strftime for SQLite-compatible week grouping
-                func.strftime('%Y-%W', BusinessReport.created_at).label('week'),
-                func.sum(BusinessReport.units_sold).label('total_units'),
-                func.sum(BusinessReport.revenue).label('total_revenue'),
-                func.avg(BusinessReport.conversion_rate).label('avg_conversion')
+                func.strftime('%Y-%W', self.BusinessReport.created_at).label('week'),
+                func.sum(self.BusinessReport.units_sold).label('total_units'),
+                func.sum(self.BusinessReport.revenue).label('total_revenue'),
+                func.avg(self.BusinessReport.conversion_rate).label('avg_conversion')
             )
             .filter(
-                BusinessReport.store_id == store_id,
-                BusinessReport.created_at.between(start_date, end_date)
+                self.BusinessReport.store_id == store_id,
+                self.BusinessReport.created_at.between(start_date, end_date)
             )
             .group_by('week')
             .order_by('week')
@@ -777,15 +779,15 @@ class AnalyticsEngine:
         """Analyze monthly sales trends."""
         monthly_data = (
             db.session.query(
-                extract('year', BusinessReport.created_at).label('year'),
-                extract('month', BusinessReport.created_at).label('month'),
-                func.sum(BusinessReport.units_sold).label('total_units'),
-                func.sum(BusinessReport.revenue).label('total_revenue'),
-                func.avg(BusinessReport.conversion_rate).label('avg_conversion')
+                extract('year', self.BusinessReport.created_at).label('year'),
+                extract('month', self.BusinessReport.created_at).label('month'),
+                func.sum(self.BusinessReport.units_sold).label('total_units'),
+                func.sum(self.BusinessReport.revenue).label('total_revenue'),
+                func.avg(self.BusinessReport.conversion_rate).label('avg_conversion')
             )
             .filter(
-                BusinessReport.store_id == store_id,
-                BusinessReport.created_at.between(start_date, end_date)
+                self.BusinessReport.store_id == store_id,
+                self.BusinessReport.created_at.between(start_date, end_date)
             )
             .group_by('year', 'month')
             .order_by('year', 'month')
@@ -811,15 +813,15 @@ class AnalyticsEngine:
         """Analyze quarterly sales trends."""
         quarterly_data = (
             db.session.query(
-                extract('year', BusinessReport.created_at).label('year'),
-                func.ceil(extract('month', BusinessReport.created_at) / 3).label('quarter'),
-                func.sum(BusinessReport.units_sold).label('total_units'),
-                func.sum(BusinessReport.revenue).label('total_revenue'),
-                func.avg(BusinessReport.conversion_rate).label('avg_conversion')
+                extract('year', self.BusinessReport.created_at).label('year'),
+                func.ceil(extract('month', self.BusinessReport.created_at) / 3).label('quarter'),
+                func.sum(self.BusinessReport.units_sold).label('total_units'),
+                func.sum(self.BusinessReport.revenue).label('total_revenue'),
+                func.avg(self.BusinessReport.conversion_rate).label('avg_conversion')
             )
             .filter(
-                BusinessReport.store_id == store_id,
-                BusinessReport.created_at.between(start_date, end_date)
+                self.BusinessReport.store_id == store_id,
+                self.BusinessReport.created_at.between(start_date, end_date)
             )
             .group_by('year', 'quarter')
             .order_by('year', 'quarter')
@@ -846,13 +848,13 @@ class AnalyticsEngine:
         try:
             yearly_data = (
                 db.session.query(
-                    func.coalesce(func.sum(BusinessReport.units_sold), 0).label('total_units'),
-                    func.coalesce(func.sum(BusinessReport.revenue), 0).label('total_revenue'),
-                    func.coalesce(func.avg(BusinessReport.conversion_rate), 0).label('avg_conversion')
+                    func.coalesce(func.sum(self.BusinessReport.units_sold), 0).label('total_units'),
+                    func.coalesce(func.sum(self.BusinessReport.revenue), 0).label('total_revenue'),
+                    func.coalesce(func.avg(self.BusinessReport.conversion_rate), 0).label('avg_conversion')
                 )
                 .filter(
-                    BusinessReport.store_id == store_id,
-                    extract('year', BusinessReport.created_at) == year
+                    self.BusinessReport.store_id == store_id,
+                    extract('year', self.BusinessReport.created_at) == year
                 )
                 .first()
             )

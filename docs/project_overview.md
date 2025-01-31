@@ -8,109 +8,143 @@ Amazon satıcılarının mağaza verilerini analiz etmelerini, trendleri takip e
 - Veri analizini otomatikleştirmek ve hızlandırmak
 - Özelleştirilebilir metrik ve görselleştirmeler sağlamak
 - Yüksek performanslı ve ölçeklenebilir bir sistem oluşturmak
+- Modüler ve genişletilebilir bir mimari sağlamak
 
-## 3. Rapor Türleri ve Özellikleri
+## 3. Modüler Mimari
 
-### 3.1 Business Report
+### 3.1 Temel Prensipler
+- Her modül bağımsız çalışabilir
+- Ortak altyapıyı kullanır ama özelleştirebilir
+- Kod tekrarını minimize eder
+- Modüller arası bağımlılık minimum seviyede
+
+### 3.2 Ortak Altyapı Bileşenleri
+
+#### Template Engine
+- Tüm modüller için ortak template yapısı
+- Modül özelinde özelleştirilebilir bloklar
+- Tutarlı kullanıcı deneyimi
+```html
+<!-- base_report.html -->
+{% extends "base.html" %}
+{% block content %}
+  {% block metrics_section %}{% endblock %}
+  {% block chart_section %}{% endblock %}
+  {% block table_section %}{% endblock %}
+{% endblock %}
+```
+
+#### Analytics Engine
+- Her modül için bağımsız analitik motoru
+- Ortak metrik hesaplama altyapısı
+- Modüle özel metrik ve grafik desteği
+```python
+class BaseAnalyticsEngine:
+    def calculate_base_metrics(self):
+        pass
+    
+class BusinessAnalytics(BaseAnalyticsEngine):
+    def calculate_sales_metrics(self):
+        pass
+```
+
+### 3.3 Modül Yapısı
+Her modül (Business, Inventory, Advertising, Returns) şu yapıyı takip eder:
+```
+/modules/{module_name}/
+  ├── routes.py           # Endpoint tanımları
+  ├── models.py           # Veri modelleri
+  ├── services/
+  │   ├── report.py      # Rapor servisleri
+  │   └── analytics.py   # Analitik servisleri
+  ├── templates/
+  │   └── {module_name}/ # Modüle özel template'ler
+  └── static/
+      └── {module_name}/ # Modüle özel statik dosyalar
+```
+
+## 4. Rapor Türleri ve Özellikleri
+
+### 4.1 Business Report
 - Satış performansı analizi
 - Ürün bazlı metrikler
 - Dönüşüm oranları ve trend analizi
 - Kategori bazlı performans karşılaştırması
 
-### 3.2 Inventory Report
+#### MVP Özellikleri
+- **Filtreler**:
+  - Tarih aralığı
+  - Group by (daily/weekly/monthly)
+  - Ana kategori
+  - ASIN
+
+- **Grafikler**:
+  1. Revenue Trend (Line Chart)
+  2. Orders & Units (Bar Chart)
+  3. Conversion Rate (Line + Area)
+  4. Top Performers (Horizontal Bar)
+
+- **Backend**:
+  - SQLAlchemy ile veri sorgulama
+  - Pandas ile veri işleme
+  - Metrik hesaplama
+
+- **Frontend**:
+  - Alpine.js ile state management
+  - Chart.js ile grafikler
+  - TailwindCSS ile responsive tasarım
+
+#### Geliştirme Sırası
+1. Temel filtreler ve veri yapısı
+2. İlk iki grafik (Revenue + Orders/Units)
+3. Conversion Rate grafiği
+4. Top Performers grafiği
+5. Eksik tarih doldurma mantığı
+6. UI/UX iyileştirmeleri
+
+#### MVP Sonrası
+- Quarterly/Yearly group by
+- Alt kategori desteği
+- Daha fazla metrik
+- Export özellikleri
+- Detaylı tablo görünümü
+
+### 4.2 Inventory Report
 - Stok seviyesi takibi
 - Stok devir hızı analizi
 - Tedarik zinciri metrikleri
 - Stok maliyeti analizi
 
-### 3.3 Returns Report
+### 4.3 Returns Report
 - İade oranları analizi
 - İade nedenleri dağılımı
 - Ürün/kategori bazlı iade analizi
 - İade maliyeti hesaplaması
 
-### 3.4 Advertisement Report
+### 4.4 Advertisement Report
 - Reklam performansı analizi
 - ACOS ve TACOS metrikleri
 - Kampanya bazlı analiz
 - ROI hesaplaması
 
-## 4. Teknik Altyapı
+## 5. Teknik Altyapı
 
-### 4.1 Metrik Sistemi
-```typescript
-interface MetricConfig {
-    id: string;
-    name: string;
-    description: string;
-    formula: string | ((data: any[]) => number);
-    category: 'sales' | 'inventory' | 'advertising' | 'customer' | 'logistics' | 'custom';
-    dependencies?: string[];
-    visualization: {
-        type: 'currency' | 'percentage' | 'number' | 'custom';
-        format?: string;
-        chartType?: 'line' | 'bar' | 'pie';
-        options?: {
-            stacked?: boolean;
-            cumulative?: boolean;
-            compareWithPrevious?: boolean;
-        };
-    };
-    permissions?: string[];
-    thresholds?: {
-        warning?: number;
-        critical?: number;
-        direction?: 'asc' | 'desc';
-    };
-    caching?: {
-        duration: number;
-        key: string[];
-    };
-}
-
-// Örnek Metrik Tanımları
-const BusinessMetrics: Record<string, MetricConfig> = {
-    total_revenue: {
-        id: 'total_revenue',
-        name: 'Total Revenue',
-        description: 'Total revenue from all orders',
-        formula: 'sum(ordered_product_sales)',
-        category: 'sales',
-        visualization: {
-            type: 'currency',
-            format: '$0,0.00',
-            chartType: 'line',
-            options: {
-                compareWithPrevious: true
-            }
-        },
-        thresholds: {
-            warning: 1000,
-            critical: 500,
-            direction: 'desc'
-        }
-    },
-    conversion_rate: {
-        id: 'conversion_rate',
-        name: 'Conversion Rate',
-        description: 'Percentage of sessions resulting in orders',
-        formula: '(sum(units_ordered) / sum(sessions)) * 100',
-        category: 'sales',
-        visualization: {
-            type: 'percentage',
-            format: '0.00%',
-            chartType: 'line'
-        },
-        thresholds: {
-            warning: 2,
-            critical: 1,
-            direction: 'desc'
-        }
+### 5.1 Metrik Sistemi
+Her modül kendi metriklerini tanımlar ancak ortak bir format kullanır:
+```python
+METRIC_CONFIG = {
+    'id': str,          # Metrik ID
+    'name': str,        # Görünen isim
+    'category': str,    # Metrik kategorisi
+    'formula': Callable, # Hesaplama fonksiyonu
+    'visualization': {   # Görselleştirme ayarları
+        'type': str,
+        'options': dict
     }
-};
+}
 ```
 
-### 4.2 Filtreleme Sistemi
+### 5.2 Filtreleme Sistemi
 ```typescript
 interface FilterDefinition {
     id: string;
@@ -123,237 +157,59 @@ interface FilterDefinition {
         pattern?: string;
     };
     dependencies?: {
-        field: string;      // Bağımlı olduğu filtre
-        condition: string;  // Koşul
-        value: any;        // Koşul değeri
+        field: string;      
+        condition: string;  
+        value: any;        
     }[];
 }
+```
 
-## Business Analytics Development Status
+## 6. Geliştirme Durumu
 
-### Completed Features
-1. **Metric Engine Implementation**
-   - Created core metric engine for business analytics
-   - Implemented metric registration system
-   - Added support for metric visualization configurations
+### 6.1 Tamamlanan Özellikler
+1. **Metrik Motoru**
+   - Temel metrik motoru oluşturuldu
+   - Metrik kayıt sistemi implementasyonu
+   - Görselleştirme konfigürasyonları
 
-2. **Business Report Service**
-   - Implemented trend analysis for key metrics
-   - Added support for historical comparisons
-   - Integrated growth rate calculations
-   - Metrics implemented:
-     - Total Revenue (ordered_product_sales)
-     - Total Orders (total_order_items)
-     - Sessions
-     - Conversion Rate
+2. **Rapor Servisleri**
+   - Trend analizi implementasyonu
+   - Tarihsel karşılaştırmalar
+   - Büyüme oranı hesaplamaları
 
-3. **Data Processing**
-   - Added support for date range filtering
-   - Implemented category and ASIN filtering
-   - Added data aggregation by daily/weekly/monthly periods
+3. **Kategori Yönetimi**
+   - Veritabanı modelleri
+   - Admin yetkilendirmesi
+   - API endpoint'leri
+   - Frontend entegrasyonu
 
-4. **UI Components**
-   - Created metric card component with:
-     - Current value display
-     - Growth rate comparison
-     - Icon support
-     - Tooltip information
-   - Implemented chart containers for metric visualization
-   - Added filter controls for date, category, and ASIN selection
+4. **Authentication ve Authorization**
+   - Authentication ve authorization sistemi tamamlandı
 
-5. **Category Management** 
-   - [x] Veritabanı modellerini oluştur
-   - [x] Admin yetkilendirmesini ekle
-   - [x] CLI komutlarını implement et
-   - [x] API endpoint'lerini oluştur
-   - [x] Frontend entegrasyonunu tamamla
+### 6.2 Devam Eden Çalışmalar
+1. **Analytics Engine Geliştirmeleri**
+   - Modül bazlı analitik motorları
+   - Özelleştirilebilir metrik hesaplamaları
+   - Performans optimizasyonları
 
-### Current Issues
-1. **Template Rendering Issue**
-   ```
-   ERROR:app.modules.business.routes:Error rendering business report: business/business_report.html
-   jinja2.exceptions.TemplateNotFound: business/business_report.html
-   ```
-   - Fixed by updating blueprint template folder configuration
+2. **Template Sistemi**
+   - Ortak template yapısı
+   - Modül özel blokları
+   - Komponent sistemi
 
-2. **Metric Registration Error**
-   ```
-   ERROR:app.modules.business.routes:Error rendering business report: Metric total_revenue already registered
-   ValueError: Metric total_revenue already registered
-   ```
-   - Fixed by moving metric registration to module initialization
+### 6.3 Planlanan Geliştirmeler
+1. **Modüler Yapı İyileştirmeleri**
+   - Her modül için bağımsız analitik motoru
+   - Özelleştirilebilir metrik ve grafikler
+   - Minimum modül bağımlılığı
 
-3. **Current Issue: Metric Card Display**
-   - Problem: Business report page closes after adding metric cards section
-   - Possible causes:
-     - Template syntax error in metric card rendering
-     - Missing required parameters in metric_card macro
-     - Incorrect data format in initial_data
+2. **Performans Optimizasyonları**
+   - Veritabanı sorgu optimizasyonları
+   - Önbellek stratejileri
+   - Asenkron veri işleme
 
-### Next Steps
-1. **Debug Metric Card Display**
-   - Review metric_card.html component requirements
-   - Verify all required parameters are passed correctly
-   - Test metric card rendering with minimal data
-
-2. **Data Format Standardization**
-   - Ensure consistent data format between service and template
-   - Add data validation and formatting utilities
-   - Implement proper error handling for missing or invalid data
-
-3. **UI Improvements**
-   - Implement 4x1 grid layout for metric cards
-   - Add 1x4 layout for charts
-   - Improve responsive design for mobile views
-
-4. **Performance Optimization**
-   - Add caching for frequently accessed metrics
-   - Optimize database queries
-   - Implement lazy loading for charts
-
-### Technical Debt
-1. **Flask-Limiter Warning**
-   ```
-   UserWarning: Using the in-memory storage for tracking rate limits...
-   ```
-   - Need to implement proper storage backend (Redis) for production
-
-## 5. İş Planı ve Öncelikler
-
-### Faz 1: Temel Altyapı (2 Hafta)
-- [x] Proje mimarisinin oluşturulması
-- [ ] Metrik motoru geliştirme
-  - [ ] Formül parser implementasyonu
-  - [ ] Metrik hesaplama engine
-  - [ ] Önbellekleme mekanizması
-- [ ] Dinamik filtre sistemi
-  - [ ] Filtre bileşenleri
-  - [ ] Filtre state yönetimi
-  - [ ] URL entegrasyonu
-
-### Faz 2: Business Report (2 Hafta)
-- [ ] Veri modeli ve API'lerin geliştirilmesi
-  - [ ] Metrik tanımları
-  - [ ] API endpoint'leri
-  - [ ] Veri dönüşüm katmanı
-- [ ] Frontend geliştirme
-  - [ ] Dinamik metrik kartları
-  - [ ] Grafik bileşenleri
-  - [ ] Filtre paneli
-- [ ] Performans optimizasyonu
-  - [ ] Web worker implementasyonu
-  - [ ] Veri örnekleme
-  - [ ] Debouncing
-
-### Faz 3: Diğer Raporlar (4 Hafta)
-- [ ] Inventory Report implementasyonu
-- [ ] Returns Report implementasyonu
-- [ ] Advertisement Report implementasyonu
-- [ ] Cross-report analiz özelliklerinin eklenmesi
-
-### Faz 4: İyileştirmeler ve Optimizasyon (2 Hafta)
-- [ ] Performans optimizasyonu
-- [ ] Hata yakalama ve loglama
-- [ ] UI/UX iyileştirmeleri
-- [ ] Dokümantasyon ve test coverage
-
-## 6. Kalite Kriterleri
-- Tüm metrikler için birim testleri
-- %90+ test coverage
-- 1 saniyeden kısa sayfa yüklenme süresi
-- Mobil uyumlu responsive tasarım
-- WCAG 2.1 AA seviyesi erişilebilirlik
-
-## MVP - Kategori Yönetimi Planı
-
-#### 1. Veritabanı Modelleri
-- **Category Model**
-  ```python
-  class Category(db.Model):
-      id = db.Column(db.Integer, primary_key=True)
-      name = db.Column(db.String(100), nullable=False)
-      code = db.Column(db.String(10), unique=True, nullable=False)
-      parent_id = db.Column(db.Integer, db.ForeignKey('categories.id'))
-      created_at = db.Column(db.DateTime, default=datetime.utcnow)
-      subcategories = db.relationship('Category', backref=db.backref('parent', remote_side=[id]))
-  ```
-
-- **AsinCategory Model**
-  ```python
-  class AsinCategory(db.Model):
-      id = db.Column(db.Integer, primary_key=True)
-      asin = db.Column(db.String(20), unique=True, nullable=False)
-      category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
-      sub_category_id = db.Column(db.Integer, db.ForeignKey('categories.id'))
-      created_at = db.Column(db.DateTime, default=datetime.utcnow)
-      category = db.relationship('Category', foreign_keys=[category_id])
-      subcategory = db.relationship('Category', foreign_keys=[sub_category_id])
-  ```
-
-#### 2. Admin Yetkilendirmesi
-- Basit HTTP Basic Auth implementasyonu
-- Sabit admin kullanıcı adı ve şifre
-- Sadece admin veri girişi yapabilir
-
-#### 3. Terminal Komutları
-- ASIN ve kategori ekleme için CLI komutları
-- Örnek kullanım:
-  ```bash
-  flask add-category FASHION FSH
-  flask add-subcategory SUNGLASSES SGL FASHION
-  flask add-asin B0123456789 FSH SGL
-  ```
-
-#### 4. API Endpoints
-- `/api/categories`: Tüm kategori ve alt kategorileri döndürür
-- `/api/asin-categories`: ASIN ve kategori bilgilerini döndürür
-
-#### 5. Frontend Entegrasyonu
-- Kategori dropdown'ları için JavaScript fonksiyonları
-- ASIN verilerini çekmek için API çağrıları
-- Rapor tablosunu güncellemek için fonksiyonlar
-
-### Yapılacaklar
-
-1. **Kategori Yönetimi - MVP**
-   - [x] Veritabanı modellerini oluştur
-   - [x] Admin yetkilendirmesini ekle
-   - [x] CLI komutlarını implement et
-   - [x] API endpoint'lerini oluştur
-   - [x] Frontend entegrasyonunu tamamla
-
-2. **Rapor Entegrasyonu**
-   - [ ] Add category filters to all reports:
-     - Business Report
-     - Advertising Report
-     - Inventory Report
-     - Returns Report
-   - [ ] Category-based metrics
-   - [ ] Performance comparisons
-   - [ ] Filtering and grouping:
-     - Main category filtering
-     - Subcategory filtering
-     - ASIN filtering
-
-3. **Test ve Deploy**
-   - [ ] Veritabanı migration'larını oluştur
-   - [ ] Test verilerini hazırla
-   - [ ] Tüm API endpoint'lerini test et
-   - [ ] Frontend fonksiyonlarını test et
-   - [ ] Uygulamayı çalıştır ve hataları gider
-
-### Gelecek Geliştirmeler
-1. **Otomatik Kategori Atama**
-   - Bulk import/export sistemi
-   - CSV dosya desteği
-   - Toplu işlem raporlama
-
-2. **Admin Arayüzü**
-   - Web tabanlı veri girişi
-   - Kategori yönetim paneli
-   - ASIN yönetim paneli
-
-3. **API Geliştirmeleri**
-   - Pagination
-   - Gelişmiş filtreleme
-   - Rate limiting
+## 7. Katkıda Bulunma
+1. Yeni bir modül eklerken modül yapısını takip edin
+2. Ortak altyapı bileşenlerini kullanın
+3. Modül özelinde gerekli özelleştirmeleri yapın
+4. Test coverage'ını koruyun
