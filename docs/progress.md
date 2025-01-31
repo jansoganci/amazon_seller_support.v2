@@ -284,3 +284,41 @@
 3. Enhance dashboard with useful metrics
 4. Add multi-language support
 5. Develop IPS optimization system
+
+## Business Report MVP Planı
+
+### 1. Filtre Yapısı
+```javascript
+const filters = {
+    dateRange: {
+        start: Date,
+        end: Date
+    },
+    groupBy: ['daily', 'weekly', 'monthly'],
+    category: String,  // Sadece ana kategori
+    asin: String      // Kategoriden bağımsız
+}
+```
+
+### 2. Grafikler
+```
+1. Revenue Trend (Line Chart)
+2. Orders & Units (Bar Chart)
+3. Conversion Rate (Line + Area)
+4. Top Performers (Horizontal Bar)
+```
+
+### 3. Geliştirme Sırası
+1. Temel filtreler ve veri yapısı
+2. İlk iki grafik (Revenue + Orders/Units)
+3. Conversion Rate grafiği
+4. Top Performers grafiği
+5. Eksik tarih doldurma mantığı
+6. UI/UX iyileştirmeleri
+
+### MVP Sonrası
+- Quarterly/Yearly group by
+- Alt kategori desteği
+- Daha fazla metrik
+- Export özellikleri
+- Detaylı tablo görünümü

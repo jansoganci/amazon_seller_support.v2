@@ -11,6 +11,7 @@ from app.modules.business.models import BusinessReport
 from app.modules.business.constants import REQUIRED_COLUMNS, ERROR_MESSAGES
 from .base import BaseCSVProcessor
 from ..validators.business import BusinessCSVValidator
+from app.modules.stores.models import Store  # Store modülünün doğru path'i
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +99,25 @@ class BusinessCSVProcessor(BaseCSVProcessor):
                 
         return len(errors) == 0, errors
         
+    def validate_store_access(self, store_id: int, user_id: int) -> Tuple[bool, str]:
+        """Validate user has access to store.
+        
+        Args:
+            store_id: Store ID to validate access for
+            user_id: User ID to validate access for
+            
+        Returns:
+            Tuple[bool, str]: (success status, error message)
+        """
+        if not store_id:
+            return False, "Store ID is required"
+
+        store = Store.query.filter_by(id=store_id, user_id=user_id).first()
+        if not store:
+            return False, f"You don't have access to store: {store_id}"
+
+        return True, ""
+        
     def save_data(self, df: pd.DataFrame, user_id: int) -> Tuple[bool, str]:
         """Save the business report data to the database."""
         try:
@@ -108,6 +128,12 @@ class BusinessCSVProcessor(BaseCSVProcessor):
             is_valid, errors = self.validate_data(df)
             if not is_valid:
                 return False, "\n".join(errors)
+            
+            # Validate store access
+            for _, row in df.iterrows():
+                is_valid, errors = self.validate_store_access(row['store_id'], user_id)
+                if not is_valid:
+                    return False, "\n".join(errors)
             
             # Define unique columns for business reports
             unique_columns = ['store_id', 'date', 'sku', 'asin']

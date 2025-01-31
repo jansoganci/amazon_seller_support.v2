@@ -4,8 +4,8 @@
 from app.extensions import db
 
 # Import all models
-from .user import User
-from .store import Store
+from app.modules.auth.models import User
+from app.modules.stores.models import Store
 from app.modules.business.models import BusinessReport
 from app.modules.category.models import Category, ASINCategory
 from app.modules.advertising.models import AdvertisingReport

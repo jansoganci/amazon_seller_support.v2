@@ -11,8 +11,8 @@ from sqlalchemy import text
 
 from app import create_app
 from app.extensions import db, bcrypt
-from app.models.user import User
-from app.models.store import Store
+from app.modules.auth.models import User
+from app.modules.stores.models.models import Store
 from app.modules.business.models import BusinessReport
 from app.modules.inventory.models import InventoryReport
 from app.modules.returns.models import ReturnReport
@@ -24,13 +24,35 @@ def app():
     """Create a Flask application for testing."""
     from app.config import TestingConfig
     
-    app = create_app(TestingConfig)
+    _app = create_app({
+        'TESTING': True,
+        'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
+        'SQLALCHEMY_TRACK_MODIFICATIONS': False,
+        'WTF_CSRF_ENABLED': False,
+        'SECRET_KEY': 'test-secret-key'
+    })
     
-    with app.app_context():
-        db.create_all()  # Create all tables
-        yield app
-        db.session.remove()
-        db.drop_all()  # Drop all tables after tests
+    # Create temp folder for file uploads
+    with _app.app_context():
+        temp_folder = tempfile.mkdtemp()
+        _app.config['UPLOAD_FOLDER'] = temp_folder
+        
+        # Create upload folders
+        upload_folders = ['temp', 'processed']
+        for folder in upload_folders:
+            folder_path = os.path.join(temp_folder, folder)
+            if not os.path.exists(folder_path):
+                os.makedirs(folder_path)
+                
+        # Create database tables
+        db.create_all()
+    
+    ctx = _app.test_request_context()
+    ctx.push()
+    
+    yield _app
+    
+    ctx.pop()
 
 @pytest.fixture
 def database(app):
@@ -51,18 +73,56 @@ def database(app):
 @pytest.fixture
 def client(app):
     """Create a test client."""
+    app.config['TESTING'] = True
+    app.config['SERVER_NAME'] = 'localhost'
     return app.test_client()
+
+@pytest.fixture
+def admin_user(database):
+    """Create an admin user."""
+    user = User(
+        email='admin@example.com',
+        role='admin'
+    )
+    user.set_password('password')
+    database.session.add(user)
+    database.session.commit()
+    
+    # Set identity for 
+    user.id = user.get_id()
+    
+    return user
+
+@pytest.fixture
+def regular_user(database):
+    """Create a regular user."""
+    user = User(
+        email='user@example.com',
+        role='user'
+    )
+    user.set_password('password')
+    database.session.add(user)
+    database.session.commit()
+    
+    # Set identity for 
+    user.id = user.get_id()
+    
+    return user
 
 @pytest.fixture
 def test_user(database):
     """Create a test user."""
     user = User(
         email='test@example.com',
-        password=bcrypt.generate_password_hash('password').decode('utf-8'),
-        role='admin'
+        role='user'
     )
+    user.set_password('password')
     database.session.add(user)
     database.session.commit()
+    
+    # Set identity for 
+    user.id = user.get_id()
+    
     return user
 
 @pytest.fixture

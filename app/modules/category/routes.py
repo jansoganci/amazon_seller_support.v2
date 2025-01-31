@@ -2,7 +2,8 @@
 
 from typing import Dict, Any
 from flask import Blueprint, jsonify, request, current_app
-from werkzeug.exceptions import BadRequest
+from flask_login import login_required
+from werkzeug.exceptions import BadRequest, Unauthorized, Forbidden
 from app.modules.category.services.category_service import CategoryService
 from app.decorators import admin_required
 from app.utils.pagination import paginate_query
@@ -24,6 +25,7 @@ def paginate_results(query, page=1, per_page=50):
     }
 
 @bp.route('/', methods=['GET'])
+@login_required
 @admin_required
 def get_categories():
     """Get category tree.
@@ -58,6 +60,7 @@ def get_categories():
         return jsonify({"error": "Internal server error"}), 500
 
 @bp.route('/', methods=['POST'])
+@login_required
 @admin_required
 def create_category():
     """Create a new category.
@@ -96,40 +99,27 @@ def create_category():
         return jsonify({"error": "Internal server error"}), 500
 
 @bp.route('/asin/<string:asin>', methods=['GET'])
+@login_required
 @admin_required
 def get_asin_categories(asin: str):
     """Get categories for an ASIN.
     
     Args:
-        asin: Amazon Standard Identification Number
+        asin (str): Amazon Standard Identification Number
         
     Returns:
-        JSON response with ASIN category information.
-        
-    Example response:
-        {
-            "data": [
-                {
-                    "category": "Electronics",
-                    "category_code": "electronics",
-                    "parent_category": "All",
-                    "parent_code": "#N/A",
-                    "title": "iPhone 13"
-                }
-            ]
-        }
+        JSON response with categories for the ASIN.
     """
     try:
         service = CategoryService()
         categories = service.get_asin_categories(asin)
-        if not categories:
-            return jsonify({"error": f"No categories found for ASIN {asin}"}), 404
-        return jsonify({"data": categories})
+        return jsonify({"data": [c.to_dict() for c in categories]})
     except Exception as e:
         current_app.logger.error(f"Error getting ASIN categories: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
 @bp.route('/asin', methods=['POST'])
+@login_required
 @admin_required
 def assign_asin_category():
     """Assign category to an ASIN.
@@ -148,10 +138,12 @@ def assign_asin_category():
     try:
         data = request.get_json()
         if not data:
-            raise BadRequest("Missing request body")
+            return jsonify({"error": "Missing request body"}), 400
         
-        if 'asin' not in data or 'category_code' not in data or 'title' not in data:
-            raise BadRequest("ASIN, category code, and title are required")
+        required_fields = ['asin', 'category_code', 'title']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({"error": f"{field} is required"}), 400
         
         service = CategoryService()
         mapping = service.assign_asin_category(
@@ -168,6 +160,7 @@ def assign_asin_category():
         return jsonify({"error": "Internal server error"}), 500
 
 @bp.route('/asin/bulk', methods=['POST'])
+@login_required
 @admin_required
 def bulk_assign_categories():
     """Bulk assign categories to ASINs.
@@ -194,28 +187,23 @@ def bulk_assign_categories():
     """
     try:
         data = request.get_json()
-        if not data:
-            raise BadRequest("Missing request body")
+        if not data or 'mappings' not in data:
+            return jsonify({"error": "Missing mappings in request body"}), 400
         
-        if 'mappings' not in data:
-            raise BadRequest("Mappings are required")
-        
-        for mapping in data['mappings']:
-            if 'asin' not in mapping or 'category_code' not in mapping or 'title' not in mapping:
-                raise BadRequest("Each mapping must contain asin, category_code, and title")
+        if not isinstance(data['mappings'], list):
+            return jsonify({"error": "Mappings must be a list"}), 400
         
         service = CategoryService()
         mappings = service.bulk_assign_categories(data['mappings'])
         return jsonify({"data": [m.to_dict() for m in mappings]}), 201
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
-    except BadRequest as e:
-        return jsonify({"error": str(e)}), 400
     except Exception as e:
-        current_app.logger.error(f"Error in bulk assignment: {str(e)}")
+        current_app.logger.error(f"Error bulk assigning categories: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
 @bp.route('/asin/uncategorized', methods=['GET'])
+@login_required
 @admin_required
 def get_uncategorized_asins():
     """Get ASINs without category assignments.
@@ -232,11 +220,10 @@ def get_uncategorized_asins():
         per_page = request.args.get('per_page', 50, type=int)
         
         service = CategoryService()
-        query = service.get_uncategorized_asins()
+        asins = service.get_uncategorized_asins()
+        paginated = paginate_results(asins, page, per_page)
         
-        result = paginate_results(query, page, per_page)
-        return jsonify({'data': result}), 200
-        
+        return jsonify({"data": paginated})
     except Exception as e:
         current_app.logger.error(f"Error getting uncategorized ASINs: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": "Internal server error"}), 500

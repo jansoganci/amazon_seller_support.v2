@@ -4,7 +4,7 @@ import pytest
 import uuid
 from datetime import datetime, UTC
 from app.extensions import db, bcrypt
-from app.models.user import User
+from app.modules.auth.models import User
 from app.modules.category.models.category import Category, ASINCategory
 
 @pytest.fixture
