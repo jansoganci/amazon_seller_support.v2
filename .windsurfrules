@@ -8,11 +8,11 @@
 - Alpine.js: 3.13.3
 - Chart.js: 4.4.1
 
-// Project Structure Rules
-- Backend code must reside in `/app/`.
-- Templates (HTML) must be in `/app/templates/`.
-- Static files (CSS, JS, images) must be in `/app/static/`.
-- Each module must have the following structure:
+// Project Structure Guidelines
+- Backend code should be located in `/app/`.
+- All HTML templates must be placed in `/app/templates/`.
+- Static files (CSS, JS, images) should reside in `/app/static/`.
+- Each module must follow the structure below:
   /app/modules/{module_name}/
     - models.py
     - routes.py
@@ -21,94 +21,94 @@
     - static/
 
 // Naming Conventions
-- Python files: snake_case (e.g., `services.py`).
-- HTML files: kebab-case (e.g., `dashboard-view.html`).
-- CSS files: kebab-case (e.g., `button-styles.css`).
-- JavaScript files: camelCase (e.g., `formHelper.js`).
-- Test files: test_*.py (e.g., `test_routes.py`).
+- Python files: Use snake_case (e.g., `services.py`).
+- HTML files: Use kebab-case (e.g., `dashboard-view.html`).
+- CSS files: Use kebab-case (e.g., `button-styles.css`).
+- JavaScript files: Use camelCase (e.g., `formHelper.js`).
+- Test files: Prefix with `test_` (e.g., `test_routes.py`).
 
 // TailwindCSS Configuration
-- All TailwindCSS classes must follow class sorting rules.
+- TailwindCSS classes should be sorted according to the class sorting rules.
 - Tree-shaking must be enabled in `tailwind.config.js` with the following:
   content: [
     "./app/templates/**/*.html",
     "./app/static/src/**/*.js"
   ]
-- Add `prettier-plugin-tailwindcss` for automatic class sorting.
+- Integrate `prettier-plugin-tailwindcss` for automatic class sorting.
 
-// Linting and Formatting Rules
+// Linting and Formatting Guidelines
 - JavaScript must pass ESLint checks.
-- Python must pass Flake8 and Black formatting checks.
-- Add the following ESLint configuration for TailwindCSS:
+- Python must comply with Flake8 and Black formatting standards.
+- Include the following ESLint configuration for TailwindCSS:
   plugins: ["tailwindcss"],
   rules: {
     "tailwindcss/classnames-order": "warn",
   }
 
 // Testing Rules
-- All Python tests must achieve at least 80% coverage.
-- Tests for modules must be placed in `/tests/modules/{module_name}/`.
-- Shared fixtures must be in `/tests/conftest.py`.
-- Integration tests must be included for all API endpoints.
-- E2E tests required for critical user flows.
+- All Python tests must have at least 80% test coverage.
+- Place tests for each module in `/tests/modules/{module_name}/`.
+- Shared fixtures should be stored in `/tests/conftest.py`.
+- All API endpoints must have integration tests.
+- End-to-End (E2E) tests must be provided for critical user flows.
 
-// Documentation Rules
-- API updates must be documented in `/docs/api.md`.
-- Technical updates must be documented in `/docs/technical.md`.
-- All new features must include user guide updates.
-- Code must include docstrings following Google style.
-- Update CHANGELOG.md for all notable changes.
+// Documentation Guidelines
+- Document API updates in `/docs/api.md`.
+- Document technical updates in `/docs/technical.md`.
+- New features should be accompanied by user guide updates.
+- Code must contain docstrings following the Google style guide.
+- Update `CHANGELOG.md` for all significant changes.
 
-// Security Rules
-- JWT token authentication required for all protected routes.
-- Bcrypt password hashing mandatory for user credentials.
-- Environment variables must be used for all secrets.
-- CORS policies must be explicitly defined.
-- Input validation required on all form submissions.
-- Regular security dependency updates mandatory.
+// Security Best Practices
+- Use JWT token authentication for all protected routes.
+- Bcrypt password hashing is mandatory for user credentials.
+- Use environment variables for all sensitive data (e.g., API keys, secrets).
+- Explicitly define CORS policies.
+- Validate input on all form submissions.
+- Keep dependencies updated regularly to mitigate security risks.
 
 // Git Workflow Rules
-- Branch naming convention:
-  - feature/: New features
-  - bugfix/: Bug fixes
-  - hotfix/: Critical fixes
-  - release/: Release preparations
-- Commit messages must follow Conventional Commits:
-  - feat: New features
-  - fix: Bug fixes
-  - docs: Documentation
-  - style: Code style
-  - refactor: Code refactoring
-  - test: Testing
-  - chore: Maintenance
-- Pull requests require:
-  - Minimum 1 reviewer approval
-  - All tests passing
-  - No linting errors
-  - Up-to-date with main branch
+- Branch naming conventions:
+  - `feature/`: For new features.
+  - `bugfix/`: For bug fixes.
+  - `hotfix/`: For urgent fixes.
+  - `release/`: For preparing releases.
+- Follow Conventional Commits for commit messages:
+  - `feat`: New features
+  - `fix`: Bug fixes
+  - `docs`: Documentation updates
+  - `style`: Code style changes
+  - `refactor`: Refactoring code
+  - `test`: Testing updates
+  - `chore`: Maintenance tasks
+- Pull requests should meet the following criteria:
+  - At least 1 reviewer approval.
+  - All tests must pass.
+  - No linting errors.
+  - Must be up-to-date with the main branch.
 
-// CI/CD Rules
-- GitHub Actions workflow must include:
-  - Automated testing
-  - Code coverage reporting
-  - Linting checks
-  - Security scanning
-- Pre-commit hooks mandatory for:
-  - Code formatting
-  - Linting
-  - Test running
-- Automated version bumping using semantic versioning
-- Deployment checks must verify:
-  - Database migrations
-  - Environment variables
-  - Dependencies installation
+// CI/CD Process
+- GitHub Actions must automate:
+  - Running tests.
+  - Reporting code coverage.
+  - Linting checks.
+  - Security scanning.
+- Implement pre-commit hooks for:
+  - Code formatting.
+  - Linting.
+  - Running tests.
+- Automatically bump the version using semantic versioning.
+- Deployment checks should ensure:
+  - Database migrations are applied.
+  - Environment variables are set correctly.
+  - Dependencies are installed.
 
-// Deployment Rules
-- Before deployment, all linting and testing checks must pass.
+// Deployment Guidelines
+- Ensure all linting and testing checks pass before deployment.
 - Use Gunicorn for production with a minimum of 4 workers.
-- TailwindCSS static files must be built and served via a CDN or file server.
-- Regular database backups required.
-- Zero-downtime deployment required.
-- Rollback strategy must be in place.
-- Health check endpoints must be implemented.
-- Monitoring and logging must be configured.
+- Serve TailwindCSS static files via a CDN or file server.
+- Schedule regular database backups.
+- Implement zero-downtime deployment.
+- Have a rollback strategy in place.
+- Implement health check endpoints.
+- Set up monitoring and logging systems.

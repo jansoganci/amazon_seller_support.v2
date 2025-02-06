@@ -8,6 +8,8 @@ from app.modules.stores.models import Store
 from app.modules.business.models import BusinessReport
 from app.utils.decorators import store_required
 from app.modules.business.services import BusinessReportService, BusinessAnalytics
+from app.modules.business.metrics import BUSINESS_METRICS
+from app.core.metrics.engine import metric_engine
 import logging
 
 bp = Blueprint('business', __name__, 
@@ -16,59 +18,7 @@ bp = Blueprint('business', __name__,
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-# Business metrics configuration
-BUSINESS_METRICS = {
-    'total_revenue': {
-        'name': 'Total Revenue',
-        'category': 'sales',
-        'visualization': {
-            'format': '${:,.2f}',
-            'icon': 'dollar-sign',
-            'chartType': 'line',
-            'color': 'green'
-        }
-    },
-    'total_orders': {
-        'name': 'Total Orders',
-        'category': 'sales',
-        'visualization': {
-            'format': '{:,}',
-            'icon': 'shopping-cart',
-            'chartType': 'bar',
-            'color': 'blue'
-        }
-    },
-    'total_units': {
-        'name': 'Total Units',
-        'category': 'sales',
-        'visualization': {
-            'format': '{:,}',
-            'icon': 'box',
-            'chartType': 'bar',
-            'color': 'purple'
-        }
-    },
-    'conversion_rate': {
-        'name': 'Conversion Rate',
-        'category': 'performance',
-        'visualization': {
-            'format': '{:.2f}%',
-            'icon': 'percent',
-            'chartType': 'line',
-            'color': 'orange'
-        }
-    },
-    'average_order_value': {
-        'name': 'Average Order Value',
-        'category': 'performance',
-        'visualization': {
-            'format': '${:.2f}',
-            'icon': 'trending-up',
-            'chartType': 'line',
-            'color': 'teal'
-        }
-    }
-}
+
 
 @bp.route('/')
 @login_required
@@ -466,17 +416,22 @@ def business_report():
             if metric_id in initial_data:
                 try:
                     value = initial_data[metric_id]
-                    if isinstance(value, str):
-                        # Yüzde işareti varsa temizle
-                        if '%' in value:
-                            value = float(value.strip('%'))
-                        else:
-                            value = float(value)
+                    if isinstance(value, (int, float)):
+                        numeric_value = float(value)
+                    elif isinstance(value, str):
+                        # Remove currency symbols, commas and percentage signs
+                        clean_value = value.replace('$', '').replace(',', '').replace('%', '')
+                        numeric_value = float(clean_value)
+                    else:
+                        numeric_value = 0.0
+                        
                     format_str = metric['visualization']['format']
-                    formatted_data[metric_id] = format_str.format(value)
+                    formatted_data[metric_id] = format_str.format(numeric_value)
                 except (ValueError, TypeError) as e:
-                    logger.warning(f"Format error for {metric_id}: {str(e)}")
-                    formatted_data[metric_id] = "N/A"
+                    # Don't log warning for expected string formats
+                    if not any(c in str(value) for c in ['$', ',', '%']):
+                        logger.warning(f"Format error for {metric_id}: {str(e)}")
+                    formatted_data[metric_id] = str(value) if value else 'N/A'
                 
                 # Add growth rate if available
                 growth_key = f"{metric_id}_growth"
@@ -500,18 +455,51 @@ def business_report():
         asins = service.get_asins()
         logger.debug(f"Found {len(asins)} ASINs")
         
+        # Get categories for filtering
+        logger.debug("Fetching categories")
+        categories = service.get_categories()
+        logger.debug(f"Found {len(categories)} categories")
+
+        # Structure initial data for frontend
+        frontend_data = {
+            'metrics': formatted_data,
+            'charts': {
+                'revenue_chart_data': service.get_revenue_chart_data(start_date, end_date),
+                'metrics_chart_data': service.get_metrics_chart_data(start_date, end_date),
+                'category_chart_data': service.get_category_chart_data(start_date, end_date),
+                'alert_chart_data': service.get_alert_chart_data(start_date, end_date)
+            }
+        }
+
         return render_template(
-            'business_report.html',
+            'business/business_report.html',
             store_id=store_id,
-            initial_data=formatted_data,
+            initial_data=frontend_data,
+            categories=categories,
             asins=asins,
             metrics=BUSINESS_METRICS
         )
         
+    except ValueError as e:
+        logger.warning(f"Validation error in business report: {str(e)}")
+        flash(str(e), 'warning')
+        return redirect(url_for('dashboard.index'))
     except Exception as e:
         logger.exception(f"Error rendering business report: {str(e)}")
-        flash('An error occurred while loading the report', 'error')
-        return redirect(url_for('dashboard.index'))
+        error_msg = 'An error occurred while loading the report.'
+        if current_app.debug:
+            error_msg += f' Details: {str(e)}'
+        flash(error_msg, 'error')
+        
+        # Still show the report with default values
+        return render_template(
+            'business/business_report.html',
+            store_id=store_id,
+            initial_data={},  # Empty data will use defaults
+            asins=service.get_asins() if 'service' in locals() else [],
+            metrics=BUSINESS_METRICS,
+            error_occurred=True  # Template can show error state
+        )
 
 @bp.route('/api/report-data')
 @login_required
@@ -525,13 +513,47 @@ def get_report_data():
             
         service = BusinessReportService(store_id)
         
-        start_date = request.args.get('start_date')
-        end_date = request.args.get('end_date')
+        # Parse dates
+        try:
+            start_date = datetime.strptime(request.args.get('start_date'), '%Y-%m-%d')
+            end_date = datetime.strptime(request.args.get('end_date'), '%Y-%m-%d')
+        except (ValueError, TypeError):
+            return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
+            
         category = request.args.get('category')
+        subcategory = request.args.get('subcategory')
         asin = request.args.get('asin')
+        group_by = request.args.get('group_by', 'daily')
         
         if not all([start_date, end_date]):
             return jsonify({'error': 'Missing required parameters'}), 400
+            
+        # Get metrics and chart data
+        try:
+            metrics = service.get_trends(start_date, end_date)
+            charts = {
+                'revenue_chart_data': service.get_revenue_chart_data(start_date, end_date),
+                'metrics_chart_data': service.get_metrics_chart_data(start_date, end_date),
+                'category_chart_data': service.get_category_chart_data(start_date, end_date),
+                'alert_chart_data': service.get_alert_chart_data(start_date, end_date)
+            }
+            
+            return jsonify({
+                'success': True,
+                'metrics': metrics,
+                'charts': charts
+            })
+            
+        except Exception as e:
+            logger.error(f"Error getting report data: {str(e)}")
+            return jsonify({
+                'success': False,
+                'error': 'Error processing report data'
+            }), 500
+            
+    except Exception as e:
+        logger.exception(f"Error in report data endpoint: {str(e)}")
+        return jsonify({'error': str(e)}), 500
             
         data = service.get_report_data(
             start_date=start_date,

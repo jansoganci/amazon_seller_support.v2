@@ -213,3 +213,129 @@ interface FilterDefinition {
 2. Ortak altyapı bileşenlerini kullanın
 3. Modül özelinde gerekli özelleştirmeleri yapın
 4. Test coverage'ını koruyun
+
+
+Amazon Seller Analytics - Technical Documentation & Work Plan
+
+Project Overview
+
+This document outlines the technical specifications and work plan for developing an Amazon Seller Analytics tool. The tool aims to provide analytics capabilities to Amazon sellers, focusing on metrics such as sales, revenue analysis, and conversion rates, with an initial emphasis on building a modular and MVP-compliant system.
+
+1. Project Goals and Objectives
+
+Primary Objective
+	•	Build a modular analytics engine to process and analyze sales, revenue, and inventory data for Amazon sellers.
+	•	Focus on delivering an MVP (Minimal Viable Product) that supports basic filtering, metric calculations, and reporting functionalities with minimal complexity and high usability.
+
+Future Objectives
+	•	Expand the MVP with advanced analytics, user interactivity, AI-powered insights, and data visualizations in later versions.
+
+2. Key Features for MVP
+
+Core Features (To be included in MVP):
+	1.	Filtering System:
+	•	Data Filters: Date range, category, and ASIN filters for querying data.
+	•	SQL-based filtering for rapid data extraction.
+	•	Basic query optimization via indexing and other performance strategies in future updates.
+	2.	Metric Calculation:
+	•	Basic Metrics: Revenue, Sales Metrics, Conversion Rate.
+	•	Each module (Business, Inventory, etc.) will have its own metric calculation.
+	3.	Reporting System:
+	•	Basic reports for key metrics.
+	•	Graphics: Simple trend graphs (e.g., revenue trends, conversion rates) presented to the user.
+	•	User will receive summarized data based on chosen filters.
+	4.	Modular Data Architecture:
+	•	Modular System: Each module (Business, Inventory, Returns) is self-contained, and no inter-module data sharing is required in the MVP.
+	•	Independent modules with their own data sources and processing logic.
+	•	In future versions, cross-module data integration will be possible via new tables and LEFT JOIN SQL queries.
+
+3. System Architecture & Design
+
+Modular Architecture:
+	•	Each module is responsible for its own set of functionalities and metrics (e.g., Business Report handles sales-related data and metrics).
+	•	Mixins: Shared functionalities, such as category-aware filtering, are implemented using mixins, ensuring reusability without code duplication.
+	•	Data Flow: Data flows from SQL queries to the respective module’s processing engine, which calculates metrics and generates reports.
+
+Key Components:
+	•	Analytics Engine: The backbone of the system, responsible for calculating metrics and generating reports.
+	•	Base Models and Mixins: Common functionalities for filtering and calculations are handled by shared mixins and base models, making the system scalable.
+	•	Modular Components: Each module (Business, Inventory) will extend the base analytics engine and define specific metric calculations.
+
+4. MVP Development Plan
+
+Step 1: Initial Setup and Configuration
+	•	Set up the database schema: Create tables for business, inventory, returns, and other necessary modules.
+	•	Define the basic data models: Establish models for each report type, such as BusinessReport, InventoryReport.
+	•	Implement SQL queries to support filtering by date, category, and ASIN.
+
+Step 2: Develop Core Features
+	1.	Filtering and Query System:
+	•	Build the filtering system based on the provided criteria (date range, category, ASIN).
+	•	Implement SQL-based queries to extract data from the database.
+	2.	Metric Calculation:
+	•	Define key metrics for each module (e.g., Revenue, Conversion Rate).
+	•	Implement metric calculation functions using a modular structure (e.g., BusinessAnalytics, InventoryAnalytics).
+	3.	Report Generation:
+	•	Develop a basic reporting system to display calculated metrics.
+	•	Create simple graphs (e.g., line graphs for revenue trends).
+
+Step 3: Testing & Validation
+	•	Conduct unit tests for core functionalities like metric calculations and filtering.
+	•	Implement integration tests to ensure the components work well together.
+	•	Perform end-to-end tests to verify user flows like logging in, applying filters, and viewing reports.
+
+5. Technical Specifications
+
+Database Design
+	•	Modular Data Structure:
+	•	Business, Inventory, Returns, and other relevant tables are kept separate for modularity.
+	•	No inter-module data sharing in the MVP; modules operate independently.
+	•	Future data integration can be achieved using LEFT JOINs for combining data across modules.
+
+Metric Calculation Framework
+	•	Per-Module Calculation:
+	•	Each module (Business, Inventory, etc.) is responsible for its own metric calculations.
+	•	Use of mixins to handle shared functionalities like category-aware filtering.
+
+Testing Strategy
+	•	Unit Testing:
+	•	Test individual metric calculations (e.g., Revenue, Conversion Rate).
+	•	Test SQL queries to ensure correct data retrieval.
+	•	Integration Testing:
+	•	Ensure proper integration of filtering and data retrieval logic with the database.
+	•	Validate if metrics are calculated and reported correctly.
+	•	End-to-End Testing:
+	•	Verify user interactions: login, filter application, and report generation.
+
+Modular Architecture
+	•	Each module has a clear responsibility:
+	•	Business Analytics: Handles business-related metrics and reports.
+	•	Inventory Analytics: Deals with inventory-related metrics and reports.
+	•	Modules operate independently, and data sharing is only done when necessary (future feature).
+
+6. Milestones and Timeline
+	1.	Phase 1: MVP Setup
+	•	Set up database schema and models (1 week)
+	•	Implement basic filtering system and data retrieval (2 weeks)
+	•	Define and implement key metrics for Business and Inventory modules (2 weeks)
+	2.	Phase 2: Core Features
+	•	Develop metric calculation logic and reporting system (2 weeks)
+	•	Integrate simple graphs for reporting (1 week)
+	3.	Phase 3: Testing & Finalization
+	•	Conduct unit tests, integration tests, and end-to-end tests (2 weeks)
+	•	Performance testing and optimizations if necessary (1 week)
+
+7. Future Work and Features
+
+Post-MVP Features:
+	•	Advanced Analytics: Forecasting, trend analysis, and custom user reports.
+	•	User Interaction: More interactive UI elements for deeper engagement.
+	•	AI-powered Insights: Machine learning models to predict trends and recommend actions.
+
+Scalability Considerations:
+	•	As the project grows, modular components will allow easy expansion with new features.
+	•	Performance optimizations will be prioritized once the MVP is stable.
+
+8. Conclusion
+
+This plan ensures that the MVP is developed in a modular and scalable manner, focusing on core functionalities first. The architecture supports future growth, enabling new features to be added as needed. By following this structured approach, the tool can deliver the essential analytics capabilities to Amazon sellers with a focus on ease of use, reliability, and performance.
