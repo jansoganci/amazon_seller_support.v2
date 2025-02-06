@@ -1,0 +1,384 @@
+{% extends "base_tailwind.html" %}
+{% from "components/metric_card.html" import metric_card %}
+{% from "components/chart_container.html" import chart_container %}
+
+{% block title %}Business Report{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+{# Hidden data elements for JavaScript #}
+<script id="store-id" type="application/json" data-store-id="{{ store_id }}"></script>
+<script id="initial-data" type="application/json">
+    {{ initial_data|tojson|safe }}
+</script>
+<script id="categories-data" type="application/json">
+    {{ categories|default([])|tojson|safe }}
+</script>
+
+<div id="business-report" class="p-4 bg-white dark:bg-gray-900">
+    {% if error_occurred %}
+    <div class="mb-6">
+        <div class="p-4 border-l-4 border-yellow-400 bg-yellow-50 dark:bg-yellow-900/10 dark:border-yellow-600">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-yellow-800 dark:text-yellow-200">Limited Data Available</h3>
+                    <div class="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
+                        <p>Some metrics may be showing default values due to a temporary error. Please try refreshing the page.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Business Report</h1>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Monitor your store's revenue and performance metrics</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
+        <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date Range</label>
+            <div class="relative">
+                <input type="text" id="daterange" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Select date range" readonly>
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Group By</label>
+            <select id="groupBy" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="yearly">Yearly</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+            <select id="category" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <option value="">All Categories</option>
+                {% for category in categories %}
+                <option value="{{ category.name }}">{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subcategory</label>
+            <select id="subcategory" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <option value="">All Subcategories</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ASIN</label>
+            <select id="asin" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <option value="">All ASINs</option>
+                {% for asin in asins %}
+                <option value="{{ asin.asin }}">{{ asin.asin }} - {{ asin.title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <!-- Apply Filters Button -->
+    <div class="flex justify-end mb-6">
+        <button id="applyFilters" type="button" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900">
+            <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            Apply Filters
+        </button>
+    </div>
+
+    <!-- Metric Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6" id="metricCards">
+        {% for metric_id, metric in metrics.items() %}
+            {% set growth_value = initial_data.get(metric_id ~ '_growth', '0')|float %}
+            {{ metric_card(
+                icon=metric.visualization.icon|default('chart-bar'),
+                title=metric.name,
+                value_id=metric_id,
+                default_value=initial_data.get(metric_id, 'N/A'),
+                description=metric.description|default(''),
+                extra_info=metric.visualization.format|default('')
+            ) }}
+        {% endfor %}
+    </div>
+
+    <!-- Analytics Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Revenue Chart -->
+        {{ chart_container(
+            title="Revenue Trend",
+            subtitle="Daily revenue over time",
+            chart_id="revenue-chart"
+        ) }}
+
+        <!-- Category Chart -->
+        {{ chart_container(
+            title="Sales by Category",
+            subtitle="Revenue distribution across categories",
+            chart_id="category-chart"
+        ) }}
+
+        <!-- Top Products Chart -->
+        {{ chart_container(
+            title="Top Products",
+            subtitle="Revenue by top selling products",
+            chart_id="products-chart"
+        ) }}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize data from server
+    const categoriesData = JSON.parse(document.getElementById('categories-data').textContent || '[]');
+    const storeId = document.getElementById('store-id').dataset.storeId;
+    const initialData = JSON.parse(document.getElementById('initial-data').textContent || '{}');
+    let datePicker = null;
+    
+    // Initialize charts and metrics with initial data
+    if (initialData.charts) {
+        initializeCharts(initialData.charts);
+        updateMetrics(initialData.metrics || {});
+    } else {
+        // If no initial data, fetch it
+        applyFilters();
+    }
+    
+    const state = {
+        startDate: null,
+        endDate: null,
+        groupBy: 'daily',
+        category: '',
+        subcategory: '',
+        asin: '',
+        charts: {}
+    };
+
+    // Initialize date picker
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    
+    datePicker = flatpickr("#daterange", {
+        mode: "range",
+        dateFormat: "Y-m-d",
+        defaultDate: [thirtyDaysAgo, today],
+        maxDate: today,
+        showMonths: 2,
+        onChange: (selectedDates) => {
+            if (selectedDates.length === 2) {
+                state.startDate = selectedDates[0].toISOString().split('T')[0];
+                state.endDate = selectedDates[1].toISOString().split('T')[0];
+                applyFilters();
+            }
+        }
+    });
+    
+    // Set initial dates in state
+    state.startDate = thirtyDaysAgo.toISOString().split('T')[0];
+    state.endDate = today.toISOString().split('T')[0];
+
+    // Set initial dates
+    const dates = datePicker.selectedDates;
+    if (dates.length === 2) {
+        state.startDate = dates[0].toISOString().split('T')[0];
+        state.endDate = dates[1].toISOString().split('T')[0];
+    }
+
+    function updateSubcategories() {
+        const categorySelect = document.getElementById('category');
+        const subcategorySelect = document.getElementById('subcategory');
+        const selectedCategory = categoriesData.find(c => c.name === categorySelect.value);
+        
+        // Clear existing options
+        subcategorySelect.innerHTML = '<option value="">All Subcategories</option>';
+        
+        if (selectedCategory) {
+            selectedCategory.subcategories.forEach(sub => {
+                const option = document.createElement('option');
+                option.value = sub;
+                option.textContent = sub;
+                subcategorySelect.appendChild(option);
+            });
+        }
+        
+        state.category = categorySelect.value;
+        state.subcategory = '';
+    }
+
+    async function applyFilters() {
+        try {
+            const params = new URLSearchParams({
+                start_date: state.startDate,
+                end_date: state.endDate,
+                group_by: state.groupBy,
+                category: state.category,
+                subcategory: state.subcategory,
+                asin: state.asin
+            });
+
+            const response = await fetch(`/business/api/report-data?${params}`);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const data = await response.json();
+            updateMetrics(data.metrics);
+            updateCharts(data.charts);
+        } catch (error) {
+            console.error('Error fetching report data:', error);
+        }
+    }
+
+    function updateMetrics(metrics) {
+        Object.entries(metrics).forEach(([id, value]) => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = value;
+            }
+        });
+    }
+
+    function updateCharts(chartData) {
+        // Update each chart with new data
+        if (state.charts.revenue && chartData.revenue_chart_data) {
+            state.charts.revenue.data = chartData.revenue_chart_data.data;
+            state.charts.revenue.options = chartData.revenue_chart_data.options;
+            state.charts.revenue.update();
+        }
+
+        if (state.charts.category && chartData.category_chart_data) {
+            state.charts.category.data = chartData.category_chart_data.data;
+            state.charts.category.options = chartData.category_chart_data.options;
+            state.charts.category.update();
+        }
+
+        if (state.charts.products && chartData.alert_chart_data) {
+            state.charts.products.data = chartData.alert_chart_data.data;
+            state.charts.products.options = chartData.alert_chart_data.options;
+            state.charts.products.update();
+        }
+    }
+
+    // Initialize Charts
+    function initializeCharts(data) {
+        // Clear existing charts if they exist
+        if (state.charts.revenue) state.charts.revenue.destroy();
+        if (state.charts.category) state.charts.category.destroy();
+        if (state.charts.products) state.charts.products.destroy();
+        if (state.charts.sessions) state.charts.sessions.destroy();
+        // Revenue Chart
+        const revenueCtx = document.getElementById('revenue-chart').getContext('2d');
+        const revenueChart = new Chart(revenueCtx, {
+            type: 'line',
+            data: data.revenue_chart_data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: value => '$' + value.toLocaleString()
+                        }
+                    }
+                }
+            }
+        });
+
+        // Category Chart
+        const categoryCtx = document.getElementById('category-chart').getContext('2d');
+        const categoryChart = new Chart(categoryCtx, {
+            type: 'pie',
+            data: data.category_chart_data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        // Top Products Chart
+        const productsCtx = document.getElementById('products-chart').getContext('2d');
+        const productsChart = new Chart(productsCtx, {
+            type: 'bar',
+            data: data.alert_chart_data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: value => '$' + value.toLocaleString()
+                        }
+                    }
+                }
+            }
+        });
+
+        // Store chart instances for later updates
+        state.charts = {
+            revenue: revenueChart,
+            category: categoryChart,
+            products: productsChart
+        };
+    }
+
+    // Event Listeners
+    document.getElementById('category').addEventListener('change', updateSubcategories);
+    document.getElementById('subcategory').addEventListener('change', () => {
+        state.subcategory = document.getElementById('subcategory').value;
+    });
+    document.getElementById('groupBy').addEventListener('change', () => {
+        state.groupBy = document.getElementById('groupBy').value;
+    });
+    document.getElementById('asin').addEventListener('change', () => {
+        state.asin = document.getElementById('asin').value;
+    });
+    
+    // Apply Filters Button Event Listener
+    document.getElementById('applyFilters').addEventListener('click', () => {
+        // Show loading state
+        const button = document.getElementById('applyFilters');
+        const originalContent = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = `
+            <svg class="animate-spin -ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Loading...
+        `;
+        
+        // Apply filters
+        applyFilters().finally(() => {
+            // Reset button state
+            button.disabled = false;
+            button.innerHTML = originalContent;
+        });
+    });
+
+    // Initial load
+    applyFilters();
+});
+</script>
+{% endblock %}

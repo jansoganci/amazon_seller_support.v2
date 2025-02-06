@@ -47,6 +47,17 @@ class User(UserMixin, db.Model):
     active_store: Mapped[Optional["Store"]] = relationship("Store", foreign_keys=[active_store_id])
     csv_files: Mapped[List["CSVFile"]] = relationship("CSVFile", back_populates="user", lazy=True)
 
+    def has_store_access(self, store_id: int) -> bool:
+        """Check if user has access to a specific store.
+        
+        Args:
+            store_id: ID of the store to check access for
+            
+        Returns:
+            bool: True if user has access, False otherwise
+        """
+        return any(store.id == store_id for store in self.stores)
+
     @property
     def preferences(self) -> Dict[str, Any]:
         """Get user preferences."""

@@ -83,22 +83,27 @@ class MetricEngine:
     
     def _parse_value(self, value: Union[str, int, float, Decimal]) -> float:
         """Parse a value to float."""
+        # Handle numeric types directly
         if isinstance(value, (int, float)):
             return float(value)
             
         if isinstance(value, Decimal):
             return float(value)
             
-        if not isinstance(value, str):
-            raise ValueError(f"Cannot parse value of type {type(value)}")
+        # Handle string values
+        if isinstance(value, str):
+            # Remove currency symbols and commas
+            value = value.replace('$', '').replace(',', '').replace('%', '')
+            try:
+                return float(value)
+            except ValueError:
+                raise ValueError(f"Cannot parse string value: {value}")
             
-        # Remove currency symbols and commas
-        value = value.replace('$', '').replace(',', '').replace('%', '')
-        
-        try:
-            return float(value)
-        except ValueError:
-            raise ValueError(f"Cannot parse value: {value}")
+        # Handle None or other types
+        if value is None:
+            return 0.0
+            
+        raise ValueError(f"Cannot parse value of type {type(value)}")
         
     def _calculate_raw_value(self, metric: Dict, data: List[Dict]) -> Union[int, float, str]:
         """Calculate raw metric value."""
